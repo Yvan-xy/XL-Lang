@@ -1,0 +1,22 @@
+cmake_minimum_required(VERSION 3.17)
+project(RJit)
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+set(RJIT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(RJIT_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+
+include_directories(${RJIT_INCLUDE_DIR})
+
+file(GLOB_RECURSE SOURCES "${RJIT_SOURCE_DIR}/*.cpp")
+add_subdirectory("${RJIT_SOURCE_DIR}/front")
+
+
+add_executable(rjit main.cpp)
+target_link_libraries(rjit
+        RJIT::front
+        )
