@@ -52,7 +52,7 @@ namespace RJIT::front {
             case TokenType::Int:
                 return std::to_string(intValue);
             case TokenType::Char:
-                return std::string(reinterpret_cast<const char *>(&charValue));
+                return std::string(1, charValue);
             case TokenType::String:
                 return stringValue;
             case TokenType::END:

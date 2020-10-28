@@ -45,6 +45,14 @@ namespace RJIT::front {
 
         bool isKeyword(const std::string &value);
 
+        bool matchChar(char ch_);
+
+        void nextLine() {
+            pos = 0;
+            lineNumber++;
+            inStream.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        }
+
     public:
         Lexer() = default;
 

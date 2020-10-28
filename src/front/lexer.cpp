@@ -8,17 +8,17 @@ namespace RJIT::front {
             "+", "-", "*", "/", "=", ">", "<",
             ">=", "<=", "==", "!=", "!", "|", "&",
             "(", ")", ",", ";", ":", "\"", "{",
-            "}"
+            "}", "\'"
     };
 
     const std::string Lexer::keywords[] = {
             "def", "extern", "if", "else", "then", "for",
-            "in", "binary", "unary", "var", "int", "string",
-            "char", "return"
+            "in", "binary", "unary", "var", "int32", "string",
+            "char", "return", "uint32"
     };
 
     bool Lexer::isOperator() const {
-        for (auto i : operators) {
+        for (const auto &i : operators) {
             if (ch == i[0]) {
                 return true;
             }
@@ -35,6 +35,14 @@ namespace RJIT::front {
         return false;
     }
 
+    bool Lexer::matchChar(char ch_) {
+        nextChar();
+        if (ch == ch_) {
+            return true;
+        }
+        return false;
+    }
+
     Token Lexer::nextToken() {
         int curPos, curLine;
         Token token;
@@ -46,7 +54,17 @@ namespace RJIT::front {
             token.setType(TokenType::END);
         }
 
-        if (std::isdigit(ch)) {
+        /* Eat comments. */
+        while (ch == '#') {
+            nextLine();
+            nextChar();
+            eatSpace();
+        }
+        if (inStream.eof()) {
+            token.setToken(TokenType::END, "", lineNumber, pos);
+        }
+
+        if (std::isdigit(ch)) { // number token
             curPos = pos;
             curLine = lineNumber;
             do {
@@ -55,7 +73,7 @@ namespace RJIT::front {
             } while (std::isdigit(ch));
 
             token.setToken(TokenType::Int, value, curLine, curPos);
-        } else if (std::isalpha(ch) || ch == '_') {
+        } else if (std::isalpha(ch) || ch == '_') { // keyword or identifier
             curPos = pos;
             curLine = lineNumber;
             do {
@@ -63,17 +81,20 @@ namespace RJIT::front {
                 nextChar();
             } while (std::isalpha(ch) || std::isdigit(ch) || ch == '_');
 
-//            nextChar(); // eat end
             if (isKeyword(value)) {
                 token.setToken(TokenType::Keyword, value, curLine, curPos);
             } else {
                 token.setToken(TokenType::Identifier, value, curLine, curPos);
             }
-        } else if (isOperator()) {
+        } else if (isOperator()) {  // operator token
             curPos = pos;
             curLine = lineNumber;
             bool eat = true;
             value += ch;
+
+            bool isChar = false, isString = false;
+
+            /* Check if >=, <=, ==, != */
             if (ch == '=' || ch == '>' || ch == '<' || ch == '!') {
                 eat = false;
                 nextChar();
@@ -81,14 +102,44 @@ namespace RJIT::front {
                     value += ch;
                     eat = true;
                 }
+            } else if (ch == '\'') {    // char token
+                eat = true;
+                isChar = true;
+                if (matchChar('\'')) {
+                    LogError(__LINE__, __FILE__, "Expect a char here.");
+                }
+                value = std::string("") + ch;
+                if (!matchChar('\'')) {
+                    LogError(__LINE__, __FILE__, "Expect a ' here.");
+                }
+            } else if (ch == '"') { // string token
+                eat = true;
+                isString = true;
+                value = "";
+                if (matchChar('"')) {
+                    LogError(__LINE__, __FILE__, "Expect a string here.");
+                }
+                do {
+                    value += ch;
+                    nextChar();
+                    if (isEOF()) {
+                        LogError(__LINE__, __FILE__, "Expect a \" here");
+                    }
+                } while(ch != '"');
             }
+
             if (eat) {
                 nextChar(); // eat space
             }
-
-            token.setToken(TokenType::Operator, value, curLine, curPos);
+            if (isChar) {
+                token.setToken(TokenType::Char, value, curLine, curPos);
+            } else if (isString) {
+                token.setToken(TokenType::String, value, curLine, curPos);
+            }
+            else {
+                token.setToken(TokenType::Operator, value, curLine, curPos);
+            }
         }
-
 
         token.dump();
         return token;
