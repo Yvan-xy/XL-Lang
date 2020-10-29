@@ -12,5 +12,5 @@ int main(int argc, char *argv[]) {
     Token token;
     do {
         token = lexer.nextToken();
-    } while(token.getType() != TokenType::END);
+    } while(token.getTokenType() != TokenType::END);
 }

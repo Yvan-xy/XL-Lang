@@ -21,21 +21,25 @@ namespace RJIT::front {
     public:
         Token() = default;
 
-        TokenType getType() const { return type; }
+        TokenType getTokenType() const { return type; }
 
         int getIntValue() const { return intValue; }
 
         uint8_t getCharValue() const { return charValue; }
 
-        std::string getStringValue() const { return stringValue; }
+        const std::string &getStringValue() const { return stringValue; }
 
-        std::string getKeywordValue() const { return keywordValue; }
+        const std::string &getKeywordValue() const { return keywordValue; }
 
-        std::string getOperatorValue() const { return operatorValue; }
+        const std::string &getOperValue() const { return operatorValue; }
+
+        const std::string &getIdentifierValue() const { return identifierValue; }
 
         std::string getValue() const;
 
         int getLineNumber() const { return lineNumber; }
+
+        int getPosition() const { return pos; }
 
         int getPos() const { return pos; }
 
@@ -48,6 +52,18 @@ namespace RJIT::front {
         void setType(TokenType type_) { type = type_; }
 
         std::string type2String();
+
+        bool isIdentifier() const { return type == TokenType::Identifier; }
+
+        bool isOper() const { return type == TokenType::Operator; }
+
+        bool isKeyword() const { return type == TokenType::Keyword; }
+
+        bool isInt() const { return type == TokenType::Int; }
+
+        bool isChar() const { return type == TokenType::Char; }
+
+        bool isString() const { return type == TokenType::String; }
 
         void dump();
     };

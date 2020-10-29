@@ -11,6 +11,7 @@ namespace RJIT::front {
         const static std::string keywords[];
 
         char ch = 0;
+        std::string filename;
         std::ifstream inStream;
         int lineNumber = 1, pos = 0;
 
@@ -57,6 +58,7 @@ namespace RJIT::front {
         Lexer() = default;
 
         explicit Lexer(const std::string &filename) {
+            this->filename = filename;
             inStream.open(filename, std::ios::in);
             if (!inStream.is_open()) {
                 LogError(__LINE__, __FILE__, "File can't open.");
@@ -67,6 +69,8 @@ namespace RJIT::front {
 
 
         Token nextToken();
+
+        const std::string &GetFilename() { return filename; }
 
         static void LogInfo(int line, const char *filename, const std::string &info);
 
