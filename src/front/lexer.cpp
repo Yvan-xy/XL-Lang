@@ -8,13 +8,16 @@ namespace RJIT::front {
             "+", "-", "*", "/", "=", ">", "<",
             ">=", "<=", "==", "!=", "!", "|", "&",
             "(", ")", ",", ";", ":", "\"", "{",
-            "}", "\'"
+            "}", "\'", ">>", "<<", "&&", "||",
+            "+=", "-=", "*=", "/=", "%=", "&=",
+            "|=", "^=", "<<=", ">>="
     };
 
     const std::string Lexer::keywords[] = {
             "def", "extern", "if", "else", "then", "for",
             "in", "binary", "unary", "var", "int32", "string",
-            "char", "return", "uint32"
+            "char", "return", "uint32", "uint8", "int8", "uint",
+            "void", "int"
     };
 
     bool Lexer::isOperator() const {
@@ -59,6 +62,7 @@ namespace RJIT::front {
             nextLine();
             nextChar();
             eatSpace();
+            if (isEOF()) break;
         }
         if (inStream.eof()) {
             token.setToken(TokenType::END, "", lineNumber, pos);

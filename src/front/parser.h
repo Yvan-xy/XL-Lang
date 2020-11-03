@@ -3,9 +3,11 @@
 
 #include <map>
 #include <iostream>
+#include <optional>
 
 #include "front/lexer.h"
 #include "define/AST.h"
+#include "mid/walker/dumper.h"
 
 using namespace RJIT::AST;
 
@@ -16,7 +18,11 @@ namespace RJIT::front {
         Lexer *lexer;
         std::map<std::string, int> BinopPrecedence;
 
+        ASTPtr rootNode;
+
         void setPrecedence();
+
+        int getPrecedence();
 
         bool isLeftParentheses();
 
@@ -38,6 +44,8 @@ namespace RJIT::front {
 
         bool isFor();
 
+        bool isWhile();
+
         bool isUnary();
 
         bool isEnd();
@@ -50,13 +58,47 @@ namespace RJIT::front {
 
         bool isRightBrace();
 
+        bool isSemicolon();
+
+        bool isColon();
+
+        bool isConst();
+
+        TYPE::Type getType();
+
         void nextToken() { curToken = lexer->nextToken(); }
 
         ASTPtr LogError(const std::string &info);
 
-        bool isSemicolon();
+        ASTPtr ParseParenExpr();
 
-        bool isColon();
+        ASTPtr ParseExpression();
+
+        ASTPtr ParseBare();
+
+        ASTPtr ParseUnary();
+
+        ASTPtr ParseBinaryOPRHS(int prec, ASTPtr lhs);
+
+        ASTPtr ParseVariableDecl();
+
+        ASTPtr ParsePrimary();
+
+        ASTPtr ParseIdentifier();
+
+        ASTPtr ParseVariableDefine();
+
+        ASTPtr ParseIfElse();
+
+        ASTPtr ParseWhile();
+
+        ASTPtr ParseConst();
+
+        ASTPtr ParseFunctionDef();
+
+        ASTPtr ParseBlock();
+
+        ASTPtr ParseTop();
 
     public:
         Parser() = default;
@@ -66,17 +108,13 @@ namespace RJIT::front {
             nextToken();    // Load first token
         }
 
-        ASTPtr ParseParenExpr();
 
-        ASTPtr ParseExpression();
+        void Parse();
 
-        ASTPtr ParseVariableDecl();
-
-        ASTPtr ParsePrimary();
-
-        ASTPtr ParseIdentifier();
-
-        ASTPtr ParseVariableDefine();
+        void DumpAST() {
+            RJIT::mid::Dumper dumper(std::cout);
+            rootNode->Dump(reinterpret_cast<mid::Dumper *>(&dumper));
+        }
 
     };
 }
