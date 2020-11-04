@@ -46,6 +46,8 @@ namespace RJIT::front {
 
         bool isWhile();
 
+        bool isReturn();
+
         bool isUnary();
 
         bool isEnd();
@@ -87,6 +89,8 @@ namespace RJIT::front {
         ASTPtr ParseIdentifier();
 
         ASTPtr ParseVariableDefine();
+
+        ASTPtr ParseReturn();
 
         ASTPtr ParseIfElse();
 

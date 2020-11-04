@@ -27,6 +27,8 @@ namespace RJIT::mid {
 
         virtual void visit(UnaryAST *) = 0;
 
+        virtual void visit(ReturnAST *) = 0;
+
         virtual void visit(BlockAST *) = 0;
 
         virtual void visit(IfElseAST *) = 0;

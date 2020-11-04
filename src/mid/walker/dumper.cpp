@@ -33,9 +33,9 @@ namespace RJIT::mid {
     }
 
     void Dumper::visit(VariableDefAST *node) {
-        os << "[ \"" << node->getIdentifier();
+        os << "[ \"" << node->getIdentifier() << "\"";
         if (node->hasInit()) {
-            os << "\" : ";
+            os << " : ";
             node->getInitValue()->Dump(this);
         }
         os << " ]";
@@ -53,6 +53,12 @@ namespace RJIT::mid {
         os << "[ ";
         node->getOperand()->Dump(this);
         os << " : " << node->getOper() << " ]";
+    }
+
+    void Dumper::visit(ReturnAST *node) {
+        os << "[ ";
+        node->getReturn()->Dump(this);
+        os << " ]";
     }
 
     void Dumper::visit(BlockAST *node) {

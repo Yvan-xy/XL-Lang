@@ -160,6 +160,17 @@ namespace RJIT::AST {
         void Dump(mid::Dumper *) override;
     };
 
+    class ReturnAST : public BaseAST {
+    private:
+        ASTPtr retVal;
+    public:
+        explicit ReturnAST(ASTPtr retval) : retVal(std::move(retval)) {}
+
+        ASTPtr &getReturn() { return retVal; }
+
+        void Dump(mid::Dumper *) override;
+    };
+
     // statement block
     class BlockAST : public BaseAST {
     private:

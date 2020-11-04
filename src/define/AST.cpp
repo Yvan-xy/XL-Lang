@@ -41,6 +41,10 @@ namespace RJIT::AST {
 
     }
 
+    void ReturnAST::Dump(mid::Dumper *dumper) {
+        dumper->visit(this);
+    }
+
     void BlockAST::Dump(Dumper *dumper) {
         dumper->visit(this);
     }

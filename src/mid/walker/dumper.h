@@ -41,6 +41,8 @@ namespace RJIT::mid {
 
         void visit(UnaryAST *) override;
 
+        void visit(ReturnAST *) override;
+
         void visit(BlockAST *) override;
 
         void visit(IfElseAST *) override;

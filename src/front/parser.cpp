@@ -160,6 +160,15 @@ namespace RJIT::front {
         return false;
     }
 
+    bool Parser::isReturn() {
+        if (curToken.isKeyword() &&
+            curToken.getKeywordValue() == "return") {
+            return true;
+        }
+        return false;
+    }
+
+
     bool Parser::isUnary() {
         if (curToken.isOper()) {
             std::string op = curToken.getOperValue();
@@ -439,7 +448,7 @@ namespace RJIT::front {
                 nextToken();    // eat type
 
                 typeAST = std::make_unique<PrimTypeAST>(type);
-                argAST = std::make_unique<FuncParamAST>(std::move(typeAST), funcName);
+                argAST = std::make_unique<FuncParamAST>(std::move(typeAST), argName);
                 args.push_back(std::move(argAST));
 
                 if (isRightParentheses()) break;
@@ -515,6 +524,18 @@ namespace RJIT::front {
         return constAST;
     }
 
+    ASTPtr Parser::ParseReturn() {
+        nextToken();    // eat return
+        auto retVal = ParsePrimary();
+        if (!retVal) return nullptr;
+        ASTPtr retAST = std::make_unique<ReturnAST>(std::move(retVal));
+        if (!isSemicolon()) {
+            LogError("Expect a ';' here.");
+        }
+        nextToken();    // eat ;
+        return retAST;
+    }
+
     ASTPtr Parser::ParsePrimary() {
         if (isDefine()) {
             return ParseFunctionDef();
@@ -530,6 +551,8 @@ namespace RJIT::front {
             return ParseConst();
         } else if (isLeftParentheses()) {
             return ParseParenExpr();
+        } else if (isReturn()) {
+            return ParseReturn();
         }
         return nullptr;
     }
