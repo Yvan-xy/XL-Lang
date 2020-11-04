@@ -1,13 +1,13 @@
 #ifndef RJIT_AST_H
 #define RJIT_AST_H
 
+#include <memory>
+#include <string>
 #include <utility>
 #include <vector>
-#include <memory>
-#include <utility>
-#include <string>
 
 #include "define/type.h"
+#include "front/logger.h"
 //#include "mid/walker/dumper.h"
 
 namespace RJIT::mid {
@@ -16,13 +16,36 @@ namespace RJIT::mid {
 
 namespace RJIT::AST {
     enum class Operator {
-        Add, Sub, Mul, Div, Mod,
-        And, Or, Xor, Shl, Shr,
-        LAnd, LOr,
-        Equal, NotEqual, Less, LessEq, Great, GreatEq,
+        Add,
+        Sub,
+        Mul,
+        Div,
+        Mod,
+        And,
+        Or,
+        Xor,
+        Shl,
+        Shr,
+        LAnd,
+        LOr,
+        Equal,
+        NotEqual,
+        Less,
+        LessEq,
+        Great,
+        GreatEq,
         Assign,
-        AssAdd, AssSub, AssMul, AssDiv, AssMod,
-        AssAnd, AssOr, AssXor, AssShl, AssShr, Dam
+        AssAdd,
+        AssSub,
+        AssMul,
+        AssDiv,
+        AssMod,
+        AssAnd,
+        AssOr,
+        AssXor,
+        AssShl,
+        AssShr,
+        Dam
     };
 
     Operator string2Operator(const std::string &op);
@@ -31,10 +54,17 @@ namespace RJIT::AST {
 
     class BaseAST {
     private:
-        int line;
+        front::LoggerPtr logger;
+
     public:
-//        virtual Value *codegen() = 0;
+        void setLogger(front::LoggerPtr logger_) { logger = std::move(logger_); }
+
+        front::LoggerPtr &Logger() { return logger; }
+
+        //        virtual Value *codegen() = 0;
         virtual void Dump(mid::Dumper *) = 0;
+
+        virtual std::string getTypeStr() { return ""; }
 
         virtual ~BaseAST() = default;
     };
@@ -45,6 +75,7 @@ namespace RJIT::AST {
     class IntAST : public BaseAST {
     private:
         int value;
+
     public:
         explicit IntAST(int num) : value(num) {}
 
@@ -57,6 +88,7 @@ namespace RJIT::AST {
     class CharAST : public BaseAST {
     private:
         uint8_t value;
+
     public:
         explicit CharAST(uint8_t ch) : value(ch) {}
 
@@ -68,6 +100,7 @@ namespace RJIT::AST {
     class StringAST : public BaseAST {
     private:
         std::string value;
+
     public:
         explicit StringAST(std::string name) : value(std::move(name)) {}
 
@@ -79,6 +112,7 @@ namespace RJIT::AST {
     class VariableAST : public BaseAST {
     private:
         std::string name;
+
     public:
         explicit VariableAST(std::string name_) : name(std::move(name_)) {}
 
@@ -91,9 +125,9 @@ namespace RJIT::AST {
     private:
         ASTPtr type;
         ASTPtrList defs;
+
     public:
-        VariableDeclAST(ASTPtr type_, ASTPtrList defs_) :
-                type(std::move(type_)), defs(std::move(defs_)) {}
+        VariableDeclAST(ASTPtr type_, ASTPtrList defs_) : type(std::move(type_)), defs(std::move(defs_)) {}
 
         ASTPtrList &getDefs() { return defs; }
 
@@ -104,9 +138,9 @@ namespace RJIT::AST {
     private:
         std::string identifier;
         ASTPtr initValue;
+
     public:
-        VariableDefAST(std::string id, ASTPtr init) :
-                identifier(std::move(id)), initValue(std::move(init)) {}
+        VariableDefAST(std::string id, ASTPtr init) : identifier(std::move(id)), initValue(std::move(init)) {}
 
         const std::string &getIdentifier() { return identifier; }
 
@@ -130,9 +164,9 @@ namespace RJIT::AST {
         std::string op_str;
         Operator op;
         ASTPtr LHS, RHS;
+
     public:
-        BinaryAST(Operator op_, ASTPtr lhs, ASTPtr rhs) :
-                op(op_), LHS(std::move(lhs)), RHS(std::move(rhs)) {
+        BinaryAST(Operator op_, ASTPtr lhs, ASTPtr rhs) : op(op_), LHS(std::move(lhs)), RHS(std::move(rhs)) {
             op_str = operator2String(op);
         }
 
@@ -149,9 +183,9 @@ namespace RJIT::AST {
     private:
         std::string oper;
         ASTPtr operand;
+
     public:
-        UnaryAST(std::string operator_, ASTPtr operand_) :
-                oper(std::move(operator_)), operand(std::move(operand_)) {}
+        UnaryAST(std::string operator_, ASTPtr operand_) : oper(std::move(operator_)), operand(std::move(operand_)) {}
 
         const std::string &getOper() { return oper; }
 
@@ -163,6 +197,7 @@ namespace RJIT::AST {
     class ReturnAST : public BaseAST {
     private:
         ASTPtr retVal;
+
     public:
         explicit ReturnAST(ASTPtr retval) : retVal(std::move(retval)) {}
 
@@ -175,6 +210,7 @@ namespace RJIT::AST {
     class BlockAST : public BaseAST {
     private:
         ASTPtrList stmts;
+
     public:
         explicit BlockAST(ASTPtrList stmts_) : stmts(std::move(stmts_)) {}
 
@@ -187,9 +223,10 @@ namespace RJIT::AST {
     class IfElseAST : public BaseAST {
     private:
         ASTPtr condition, then_, else_;
+
     public:
-        IfElseAST(ASTPtr cond, ASTPtr then, ASTPtr _else) :
-                condition(std::move(cond)), then_(std::move(then)), else_(std::move(_else)) {}
+        IfElseAST(ASTPtr cond, ASTPtr then, ASTPtr _else) : condition(std::move(cond)), then_(std::move(then)),
+                                                            else_(std::move(_else)) {}
 
         ASTPtr &getCondition() { return condition; }
 
@@ -203,9 +240,9 @@ namespace RJIT::AST {
     class WhileAST : public BaseAST {
     private:
         ASTPtr condition, block;
+
     public:
-        WhileAST(ASTPtr condition_, ASTPtr block_) :
-                condition(std::move(condition_)), block(std::move(block_)) {}
+        WhileAST(ASTPtr condition_, ASTPtr block_) : condition(std::move(condition_)), block(std::move(block_)) {}
 
         ASTPtr &getCondition() { return condition; }
 
@@ -218,9 +255,9 @@ namespace RJIT::AST {
     private:
         std::string symbol;
         ASTPtrList args;
+
     public:
-        CallAST(std::string symbol_, ASTPtrList args_) :
-                symbol(std::move(symbol_)), args(std::move(args_)) {}
+        CallAST(std::string symbol_, ASTPtrList args_) : symbol(std::move(symbol_)), args(std::move(args_)) {}
 
         const std::string &getSymbol() { return symbol; }
 
@@ -235,10 +272,10 @@ namespace RJIT::AST {
         ASTPtrList args;
         TYPE::Type type;
         std::string type_str;
-    public:
 
-        ProtoTypeAST(std::string name, ASTPtrList args_, TYPE::Type type_) :
-                funcName(std::move(name)), args(std::move(args_)), type(type_) {
+    public:
+        ProtoTypeAST(std::string name, ASTPtrList args_, TYPE::Type type_) : funcName(std::move(name)),
+                                                                             args(std::move(args_)), type(type_) {
             type_str = TYPE::type2String(type);
         }
 
@@ -255,9 +292,9 @@ namespace RJIT::AST {
     private:
         ASTPtr protoType;
         ASTPtr body;
+
     public:
-        FunctionDefAST(ASTPtr proto, ASTPtr body) :
-                protoType(std::move(proto)), body(std::move(body)) {}
+        FunctionDefAST(ASTPtr proto, ASTPtr body) : protoType(std::move(proto)), body(std::move(body)) {}
 
         ASTPtr &getProtoType() { return protoType; }
 
@@ -270,10 +307,11 @@ namespace RJIT::AST {
     private:
         using Type = RJIT::TYPE::Type;
         Type type;
+
     public:
         explicit PrimTypeAST(Type type_) : type(type_) {}
 
-        std::string getTypeStr() { return TYPE::type2String(type); }
+        std::string getTypeStr() override { return TYPE::type2String(type); }
 
         void Dump(mid::Dumper *) override;
     };
@@ -282,21 +320,27 @@ namespace RJIT::AST {
 
     class FuncParamAST : public BaseAST {
     private:
-        PrimASTPtr type;
+        ASTPtr type;
         std::string identifier;
+
     public:
-        FuncParamAST(PrimASTPtr type_, std::string id) :
-                type(std::move(type_)), identifier(std::move(id)) {
+        FuncParamAST(ASTPtr type_, std::string id) : type(std::move(type_)), identifier(std::move(id)) {
         }
 
-        std::string getTypeStr() { return type->getTypeStr(); }
+        std::string getTypeStr() override { return type->getTypeStr(); }
 
         const std::string &getIdentifier() const { return identifier; }
 
         void Dump(mid::Dumper *) override;
     };
 
+    template<typename T, typename... Args>
+    ASTPtr MakeAST(front::LoggerPtr logger, Args &&... args) {
+        auto ast = std::make_unique<T>(std::forward<Args>(args)...);
+        ast->setLogger(std::move(logger));
+        return ast;
+    }
 
-}   // RJIT::AST
+}// namespace RJIT::AST
 
-#endif //RJIT_AST_H
+#endif//RJIT_AST_H

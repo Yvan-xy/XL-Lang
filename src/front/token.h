@@ -41,8 +41,6 @@ namespace RJIT::front {
 
         int getPosition() const { return pos; }
 
-        int getPos() const { return pos; }
-
         void setToken(TokenType type, const std::string &value, int line, int position);
 
         void setPosition(int position) { pos = position; }

@@ -51,7 +51,6 @@ namespace RJIT::AST {
 
     void IfElseAST::Dump(Dumper *dumper) {
         dumper->visit(this);
-
     }
 
     void CallAST::Dump(Dumper *dumper) {

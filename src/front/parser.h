@@ -5,8 +5,9 @@
 #include <iostream>
 #include <optional>
 
-#include "front/lexer.h"
 #include "define/AST.h"
+#include "front/lexer.h"
+#include "front/logger.h"
 #include "mid/walker/dumper.h"
 
 using namespace RJIT::AST;
@@ -106,6 +107,7 @@ namespace RJIT::front {
         Parser() = default;
 
         explicit Parser(Lexer *lexer_) : lexer(lexer_) {
+            setFilename(lexer->GetFilename());
             setPrecedence();
             nextToken();    // Load first token
         }
@@ -118,7 +120,12 @@ namespace RJIT::front {
             rootNode->Dump(reinterpret_cast<mid::Dumper *>(&dumper));
         }
 
+        LoggerPtr logger() {
+            auto log = std::make_unique<front::Logger>(curToken.getLineNumber(), curToken.getPosition());
+            return log;
+        }
     };
+
 }
 
 

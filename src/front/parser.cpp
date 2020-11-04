@@ -1,13 +1,12 @@
 #include "parser.h"
-#include "define/type.h"
 #include "define/color.h"
+#include "define/type.h"
 
 using namespace RJIT::TYPE;
 
 namespace RJIT::front {
     static const std::string UnaryOperator[] = {
-            "!", "-", "@", "$", "%", "^"
-    };
+            "!", "-", "@", "$", "%", "^"};
 
     void Parser::setPrecedence() {
         BinopPrecedence["="] = 2;
@@ -235,7 +234,7 @@ namespace RJIT::front {
 
 
     ASTPtr Parser::ParseVariableDecl() {
-        nextToken();    // eat var
+        nextToken();// eat var
         ASTPtr variableDefAst;
         ASTPtrList defs;
 
@@ -249,49 +248,52 @@ namespace RJIT::front {
             defs.push_back(std::move(variableDefAst));
         } while (curToken.isIdentifier());
 
-        nextToken();    // eat :
+        nextToken();// eat :
 
+        auto log = logger();
         auto type = string2Type(curToken.getKeywordValue());
-        ASTPtr typeASTPtr = std::make_unique<PrimTypeAST>(type);
+        ASTPtr typeASTPtr = MakeAST<PrimTypeAST>(std::move(log), type);
 
-        nextToken();    // eat type
+        nextToken();// eat type
         if (!isSemicolon()) {
             LogError("Expect a ; here.");
         }
-        nextToken();    // eat ;
+        nextToken();// eat ;
 
-        return std::make_unique<VariableDeclAST>(
-                std::move(typeASTPtr), std::move(defs));
+        log = logger();
+        return MakeAST<VariableDeclAST>(
+                std::move(log), std::move(typeASTPtr), std::move(defs));
     }
 
     ASTPtr Parser::ParseVariableDefine() {
         std::string identifier;
         ASTPtr initValue = nullptr;
+        auto log = logger();
         if (!curToken.isIdentifier()) {
             return LogError("Expect identifier here.");
         }
 
         // Get variable name
         identifier = curToken.getIdentifierValue();
-        nextToken();    // eat identifier
+        nextToken();// eat identifier
 
         // check init value
         if (isEqualSign()) {
-            nextToken();    // eat =
+            nextToken();// eat =
             switch (curToken.getTokenType()) {
                 case TokenType::Int:
-                    initValue = std::make_unique<IntAST>(curToken.getIntValue());
+                    initValue = MakeAST<IntAST>(std::move(log), curToken.getIntValue());
                     break;
                 case TokenType::Char:
-                    initValue = std::make_unique<CharAST>(curToken.getCharValue());
+                    initValue = MakeAST<CharAST>(std::move(log), curToken.getCharValue());
                     break;
                 case TokenType::String:
-                    initValue = std::make_unique<StringAST>(curToken.getStringValue());
+                    initValue = MakeAST<StringAST>(std::move(log), curToken.getStringValue());
                     break;
                 default:
                     return LogError("Expect a int, char, string here.");
             }
-            nextToken();    // eat init value
+            nextToken();// eat init value
         }
 
         // var a = 1, b : int;  Expect a comma or colon here.
@@ -302,26 +304,28 @@ namespace RJIT::front {
         // eat ,
         if (isComma()) { nextToken(); }
 
-        return std::make_unique<VariableDefAST>(identifier, std::move(initValue));
+        log = logger();
+        return MakeAST<VariableDefAST>(std::move(log), identifier, std::move(initValue));
     }
 
     ASTPtr Parser::ParseParenExpr() {
-        nextToken();    // eat (
+        nextToken();// eat (
         ASTPtr expr = ParseExpression();
         if (!expr) return nullptr;
         if (!isRightParentheses()) {
             LogError("Expect ')' here.");
         }
-        nextToken();    // eat ')'
+        nextToken();// eat ')'
         return expr;
     }
 
     ASTPtr Parser::ParseUnary() {
+        auto log = logger();
         if (isUnary()) {
             std::string op = curToken.getOperValue();
-            nextToken();    // eat operator
+            nextToken();// eat operator
             if (auto operand = ParseUnary()) {
-                return std::make_unique<UnaryAST>(op, std::move(operand));
+                return MakeAST<UnaryAST>(std::move(log), op, std::move(operand));
             }
         } else {
             return ParsePrimary();
@@ -341,7 +345,7 @@ namespace RJIT::front {
             if (tokPrec < prec) return lhs;
 
             Operator op = string2Operator(curToken.getOperValue());
-            nextToken();    // eat operator
+            nextToken();// eat operator
 
             ASTPtr rhs = ParseUnary();
             if (!rhs) return nullptr;
@@ -351,7 +355,10 @@ namespace RJIT::front {
                 rhs = ParseBinaryOPRHS(tokPrec + 1, std::move(rhs));
                 if (!rhs) return nullptr;
             }
-            lhs = std::make_unique<BinaryAST>(op, std::move(lhs), std::move(rhs));
+
+            auto log = logger();
+            lhs = MakeAST<BinaryAST>(
+                    std::move(log), op, std::move(lhs), std::move(rhs));
         }
     }
 
@@ -360,9 +367,11 @@ namespace RJIT::front {
         std::string identName = curToken.getIdentifierValue();
         nextToken();
 
+
         /* Parse variable */
         if (!isLeftParentheses()) {
-            ASTPtr varAST = std::make_unique<VariableAST>(identName);
+            auto log = logger();
+            ASTPtr varAST = MakeAST<VariableAST>(std::move(log), identName);
             if (!isEqualSign()) {
                 return varAST;
             } else {
@@ -370,14 +379,14 @@ namespace RJIT::front {
                 if (!isSemicolon()) {
                     LogError("Expect a ';' here.");
                 }
-                nextToken();    // eat ;
+                nextToken();// eat ;
                 return assignAST;
             }
         }
 
         /* Parse function call */
         assert(isLeftParentheses());
-        nextToken();    // eat '('
+        nextToken();// eat '('
 
         ASTPtrList args;
         ASTPtr argAST;
@@ -398,36 +407,38 @@ namespace RJIT::front {
                 nextToken();
             }
         }
-        nextToken();    // eat ')'
+        nextToken();// eat ')'
 
         if (!isSemicolon()) {
             LogError("Expect a ';' in function call.");
         }
-        nextToken();    // eat ';'
+        nextToken();// eat ';'
 
-        return std::make_unique<CallAST>(identName, std::move(args));
+        auto log = logger();
+        return MakeAST<CallAST>(std::move(log), identName, std::move(args));
     }
 
     ASTPtr Parser::ParseFunctionDef() {
-        nextToken();    // eat "def"
+        nextToken();// eat "def"
 
         Type type;
         ASTPtrList args;
         ASTPtr funcDefAST, protoAST, argAST, blockAST;
-        PrimASTPtr typeAST;
+        ASTPtr typeAST;
         std::string funcName, argName;
+        LoggerPtr log;
 
         if (!curToken.isIdentifier()) {
             LogError("Expect function name in function Proto.");
         }
 
         funcName = curToken.getIdentifierValue();
-        nextToken();    // eat function name
+        nextToken();// eat function name
 
         if (!isLeftParentheses()) {
             LogError("Expect a '(' in function proto.");
         }
-        nextToken();    // eat '('
+        nextToken();// eat '('
 
         if (!isRightParentheses()) {
             while (true) {
@@ -436,16 +447,19 @@ namespace RJIT::front {
                 }
 
                 argName = curToken.getIdentifierValue();
-                nextToken();    // eat argument name
+                nextToken();// eat argument name
                 type = getType();
 
                 if (type == Type::Dam) {
                     LogError("Expect corrent type here.");
                 }
-                nextToken();    // eat type
+                nextToken();// eat type
 
-                typeAST = std::make_unique<PrimTypeAST>(type);
-                argAST = std::make_unique<FuncParamAST>(std::move(typeAST), argName);
+                log = logger();
+                typeAST = MakeAST<PrimTypeAST>(std::move(log), type);
+
+                log = logger();
+                argAST = MakeAST<FuncParamAST>(std::move(log), std::move(typeAST), argName);
                 args.push_back(std::move(argAST));
 
                 if (isRightParentheses()) break;
@@ -453,10 +467,10 @@ namespace RJIT::front {
                 if (!isComma()) {
                     LogError("Expect a ',' in function proto.");
                 }
-                nextToken();    // eat ','
+                nextToken();// eat ','
             }
         }
-        nextToken();    // eat )
+        nextToken();// eat )
 
 
         type = getType();
@@ -464,22 +478,24 @@ namespace RJIT::front {
             if (type == Type::Dam) {
                 LogError("Expect a corrent type for function return.");
             }
-            nextToken();    // eat return type
+            nextToken();// eat return type
         } else {
             type = Type::Void;
         }
 
-        protoAST = std::make_unique<ProtoTypeAST>(funcName, std::move(args), type);
+        log = logger();
+        protoAST = MakeAST<ProtoTypeAST>(std::move(log), funcName, std::move(args), type);
 
 
         blockAST = ParseBlock();
         if (!blockAST) return nullptr;
 
-        return std::make_unique<FunctionDefAST>(std::move(protoAST), std::move(blockAST));
+        log = logger();
+        return MakeAST<FunctionDefAST>(std::move(log), std::move(protoAST), std::move(blockAST));
     }
 
     ASTPtr Parser::ParseIfElse() {
-        nextToken();    // eat 'if'
+        nextToken();// eat 'if'
         ASTPtr cond = ParseExpression();
         if (!cond) return nullptr;
 
@@ -487,16 +503,18 @@ namespace RJIT::front {
         if (!then_) return nullptr;
 
         if (isElse()) {
-            nextToken();    // eat else
+            nextToken();// eat else
             else_ = ParseBlock();
             if (!else_) return nullptr;
         }
 
-        return std::make_unique<IfElseAST>(std::move(cond), std::move(then_), std::move(else_));
+        auto log = logger();
+        return MakeAST<IfElseAST>(
+                std::move(log), std::move(cond), std::move(then_), std::move(else_));
     }
 
     ASTPtr Parser::ParseWhile() {
-        nextToken();    // eat while
+        nextToken();// eat while
         ASTPtr cond, block;
 
         cond = ParseExpression();
@@ -505,7 +523,8 @@ namespace RJIT::front {
         block = ParseBlock();
         if (!block) return nullptr;
 
-        return std::make_unique<WhileAST>(std::move(cond), std::move(block));
+        auto log = logger();
+        return MakeAST<WhileAST>(std::move(log), std::move(cond), std::move(block));
     }
 
     ASTPtr Parser::ParseBlock() {
@@ -514,7 +533,7 @@ namespace RJIT::front {
         if (!isLeftBrace()) {
             LogError("Expect '{' here.");
         }
-        nextToken();    // eat '{'
+        nextToken();// eat '{'
 
         if (!isRightBrace()) {
             while (true) {
@@ -524,34 +543,38 @@ namespace RJIT::front {
                 if (isRightBrace()) break;
             }
         }
-        nextToken();    // eat '}'
+        nextToken();// eat '}'
 
-        blockAST = std::make_unique<BlockAST>(std::move(exprs));
+        auto log = logger();
+        blockAST = MakeAST<BlockAST>(std::move(log), std::move(exprs));
         return blockAST;
     }
 
     ASTPtr Parser::ParseConst() {
         ASTPtr constAST;
+        auto log = logger();
         if (curToken.isString()) {
-            constAST = std::make_unique<StringAST>(curToken.getStringValue());
+            constAST = MakeAST<StringAST>(std::move(log), curToken.getStringValue());
         } else if (curToken.isInt()) {
-            constAST = std::make_unique<IntAST>(curToken.getIntValue());
+            constAST = MakeAST<IntAST>(std::move(log), curToken.getIntValue());
         } else if (curToken.isChar()) {
-            constAST = std::make_unique<CharAST>(curToken.getCharValue());
+            constAST = MakeAST<CharAST>(std::move(log), curToken.getCharValue());
         }
-        nextToken();    // eat const value
+        nextToken();// eat const value
         return constAST;
     }
 
     ASTPtr Parser::ParseReturn() {
-        nextToken();    // eat return
+        nextToken();// eat return
         auto retVal = ParsePrimary();
         if (!retVal) return nullptr;
-        ASTPtr retAST = std::make_unique<ReturnAST>(std::move(retVal));
+
+        auto log = logger();
+        ASTPtr retAST = MakeAST<ReturnAST>(std::move(log), std::move(retVal));
         if (!isSemicolon()) {
             LogError("Expect a ';' here.");
         }
-        nextToken();    // eat ;
+        nextToken();// eat ;
         return retAST;
     }
 
@@ -591,7 +614,8 @@ namespace RJIT::front {
             def = ParseTop();
         }
 
-        rootNode = std::make_unique<BlockAST>(std::move(defs));
+        auto log = logger();
+        rootNode = MakeAST<BlockAST>(std::move(log), std::move(defs));
     }
 
-}
+}// namespace RJIT::front
