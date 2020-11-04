@@ -182,7 +182,7 @@ namespace RJIT::front {
     }
 
     bool Parser::isConst() {
-        if (curToken.isChar() || curToken.isInt() || curToken.isInt()) {
+        if (curToken.isChar() || curToken.isInt() || curToken.isString()) {
             return true;
         }
         return false;
@@ -377,6 +377,8 @@ namespace RJIT::front {
 
         /* Parse function call */
         assert(isLeftParentheses());
+        nextToken();    // eat '('
+
         ASTPtrList args;
         ASTPtr argAST;
         if (!isRightParentheses()) {
@@ -397,6 +399,11 @@ namespace RJIT::front {
             }
         }
         nextToken();    // eat ')'
+
+        if (!isSemicolon()) {
+            LogError("Expect a ';' in function call.");
+        }
+        nextToken();    // eat ';'
 
         return std::make_unique<CallAST>(identName, std::move(args));
     }
@@ -489,7 +496,16 @@ namespace RJIT::front {
     }
 
     ASTPtr Parser::ParseWhile() {
-        return RJIT::AST::ASTPtr();
+        nextToken();    // eat while
+        ASTPtr cond, block;
+
+        cond = ParseExpression();
+        if (!cond) return nullptr;
+
+        block = ParseBlock();
+        if (!block) return nullptr;
+
+        return std::make_unique<WhileAST>(std::move(cond), std::move(block));
     }
 
     ASTPtr Parser::ParseBlock() {

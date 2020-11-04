@@ -207,6 +207,10 @@ namespace RJIT::AST {
         WhileAST(ASTPtr condition_, ASTPtr block_) :
                 condition(std::move(condition_)), block(std::move(block_)) {}
 
+        ASTPtr &getCondition() { return condition; }
+
+        ASTPtr &getBlock() { return block; }
+
         void Dump(mid::Dumper *) override;
     };
 
@@ -217,6 +221,10 @@ namespace RJIT::AST {
     public:
         CallAST(std::string symbol_, ASTPtrList args_) :
                 symbol(std::move(symbol_)), args(std::move(args_)) {}
+
+        const std::string &getSymbol() { return symbol; }
+
+        ASTPtrList &getArgs() { return args; }
 
         void Dump(mid::Dumper *) override;
     };

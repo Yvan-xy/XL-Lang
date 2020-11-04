@@ -17,7 +17,7 @@ namespace RJIT::front {
             "def", "extern", "if", "else", "then", "for",
             "in", "binary", "unary", "var", "int32", "string",
             "char", "return", "uint32", "uint8", "int8", "uint",
-            "void", "int"
+            "void", "int", "while"
     };
 
     bool Lexer::isOperator() const {

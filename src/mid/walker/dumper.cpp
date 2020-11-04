@@ -62,15 +62,16 @@ namespace RJIT::mid {
     }
 
     void Dumper::visit(BlockAST *node) {
-        os << "[\n\n";
+        os << "[\n";
         incDepth();
+        auto end = --(node->getStmts().end());
         for (const auto &i : node->getStmts()) {
             os << getPadding();
             i->Dump(this);
-            os << "\n";
+            if (i != *end) os << "\n";
         }
         decDepth();
-        os << "\n" << getPadding() << "]\n";
+        os << "\n" << getPadding() << "]";
     }
 
     void Dumper::visit(IfElseAST *node) {
@@ -82,10 +83,19 @@ namespace RJIT::mid {
             os << getPadding() << "else ";
             node->getElse()->Dump(this);
         }
+        os << "\n";
     }
 
     void Dumper::visit(CallAST *node) {
+        os << "[ \"" << node->getSymbol() << "\" : function ] ";
+        os << "(";
 
+        auto tail = --(node->getArgs().end());
+        for (const auto &i :node->getArgs()) {
+            i->Dump(this);
+            if (i != *tail) os << ", ";
+        }
+        os << ")";
     }
 
     void Dumper::visit(ProtoTypeAST *node) {
@@ -93,8 +103,7 @@ namespace RJIT::mid {
         auto tail = --(node->getArgs().end());
         for (const auto &i : node->getArgs()) {
             i->Dump(this);
-            if (i != *tail)
-                os << ", ";
+            if (i != *tail) os << ", ";
         }
         os << ") " << node->getReturnType() << " ";
     }
@@ -109,11 +118,13 @@ namespace RJIT::mid {
            << node->getTypeStr();
     }
 
-    void Dumper::visit(PrimTypeAST *node) {
-
-    }
+    void Dumper::visit(PrimTypeAST *node) {}
 
     void Dumper::visit(WhileAST *node) {
-
+        os << "while ( ";
+        node->getCondition()->Dump(this);
+        os << " ) ";
+        node->getBlock()->Dump(this);
+        os << "\n";
     }
 }
