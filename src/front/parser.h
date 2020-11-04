@@ -76,8 +76,6 @@ namespace RJIT::front {
 
         ASTPtr ParseExpression();
 
-        ASTPtr ParseBare();
-
         ASTPtr ParseUnary();
 
         ASTPtr ParseBinaryOPRHS(int prec, ASTPtr lhs);

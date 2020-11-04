@@ -74,7 +74,14 @@ namespace RJIT::mid {
     }
 
     void Dumper::visit(IfElseAST *node) {
-
+        os << "if ( ";
+        node->getCondition()->Dump(this);
+        os << " ) ";
+        node->getThen()->Dump(this);
+        if (node->getElse() != nullptr) {
+            os << getPadding() << "else ";
+            node->getElse()->Dump(this);
+        }
     }
 
     void Dumper::visit(CallAST *node) {

@@ -191,6 +191,12 @@ namespace RJIT::AST {
         IfElseAST(ASTPtr cond, ASTPtr then, ASTPtr _else) :
                 condition(std::move(cond)), then_(std::move(then)), else_(std::move(_else)) {}
 
+        ASTPtr &getCondition() { return condition; }
+
+        ASTPtr &getThen() { return then_; }
+
+        ASTPtr &getElse() { return else_; }
+
         void Dump(mid::Dumper *) override;
     };
 

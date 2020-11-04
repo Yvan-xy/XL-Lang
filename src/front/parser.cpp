@@ -335,16 +335,6 @@ namespace RJIT::front {
         return ParseBinaryOPRHS(0, std::move(LHS));
     }
 
-    ASTPtr Parser::ParseBare() {
-        auto expr = ParseExpression();
-        if (!expr) return nullptr;
-
-        if (!isSemicolon()) {
-            LogError("Expect a ';' here.");
-        }
-        return expr;
-    }
-
     ASTPtr Parser::ParseBinaryOPRHS(int prec, ASTPtr lhs) {
         while (true) {
             int tokPrec = getPrecedence();
@@ -482,7 +472,20 @@ namespace RJIT::front {
     }
 
     ASTPtr Parser::ParseIfElse() {
-        return RJIT::AST::ASTPtr();
+        nextToken();    // eat 'if'
+        ASTPtr cond = ParseExpression();
+        if (!cond) return nullptr;
+
+        ASTPtr then_ = ParseBlock(), else_ = nullptr;
+        if (!then_) return nullptr;
+
+        if (isElse()) {
+            nextToken();    // eat else
+            else_ = ParseBlock();
+            if (!else_) return nullptr;
+        }
+
+        return std::make_unique<IfElseAST>(std::move(cond), std::move(then_), std::move(else_));
     }
 
     ASTPtr Parser::ParseWhile() {
