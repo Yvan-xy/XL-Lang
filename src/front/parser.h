@@ -8,7 +8,7 @@
 #include "define/AST.h"
 #include "front/lexer.h"
 #include "front/logger.h"
-#include "mid/walker/dumper.h"
+#include "mid/walker/dumper/dumper.h"
 
 using namespace RJIT::AST;
 

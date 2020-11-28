@@ -15,10 +15,12 @@ include_directories(${RJIT_INCLUDE_DIR})
 file(GLOB_RECURSE SOURCES "${RJIT_SOURCE_DIR}/*.cpp")
 add_subdirectory("${RJIT_SOURCE_DIR}/front")
 add_subdirectory("${RJIT_SOURCE_DIR}/mid")
+add_subdirectory("${RJIT_SOURCE_DIR}/lib")
 
 
 add_executable(rjit main.cpp)
 target_link_libraries(rjit
         RJIT::front
         RJIT::mid
+#        RJIT::lib
         )

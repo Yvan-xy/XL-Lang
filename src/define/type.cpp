@@ -165,6 +165,8 @@ namespace RJIT::TYPE {
                 return "int";
             case Type::String:
                 return "string";
+            case Type::Const:
+                return "const";
             case Type::Dam:
                 return "";
         }

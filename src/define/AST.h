@@ -8,10 +8,12 @@
 
 #include "define/type.h"
 #include "front/logger.h"
-//#include "mid/walker/dumper.h"
 
 namespace RJIT::mid {
     class Dumper;
+    namespace analyzer {
+        class Symbol;
+    }
 }
 
 namespace RJIT::AST {
@@ -61,12 +63,13 @@ namespace RJIT::AST {
 
         front::LoggerPtr &Logger() { return logger; }
 
-        //        virtual Value *codegen() = 0;
-        virtual void Dump(mid::Dumper *) = 0;
-
         virtual std::string getTypeStr() { return ""; }
 
         virtual ~BaseAST() = default;
+
+        virtual void Dump(mid::Dumper *) = 0;
+
+        virtual void Symbol(mid::analyzer::Symbol *symbol) = 0;
     };
 
     typedef std::unique_ptr<BaseAST> ASTPtr;
@@ -82,6 +85,8 @@ namespace RJIT::AST {
         int getValue() const { return value; }
 
         void Dump(mid::Dumper *) override;
+
+        void Symbol(mid::analyzer::Symbol *symbol) override;
     };
 
 
@@ -95,6 +100,8 @@ namespace RJIT::AST {
         uint8_t getValue() const { return value; }
 
         void Dump(mid::Dumper *) override;
+
+        void Symbol(mid::analyzer::Symbol *symbol) override;
     };
 
     class StringAST : public BaseAST {
@@ -107,6 +114,8 @@ namespace RJIT::AST {
         const std::string &getValue() const { return value; }
 
         void Dump(mid::Dumper *) override;
+
+        void Symbol(mid::analyzer::Symbol *symbol) override;
     };
 
     class VariableAST : public BaseAST {
@@ -119,6 +128,8 @@ namespace RJIT::AST {
         const std::string &getName() const { return name; }
 
         void Dump(mid::Dumper *) override;
+
+        void Symbol(mid::analyzer::Symbol *symbol) override;
     };
 
     class VariableDeclAST : public BaseAST {
@@ -132,6 +143,8 @@ namespace RJIT::AST {
         ASTPtrList &getDefs() { return defs; }
 
         void Dump(mid::Dumper *) override;
+
+        void Symbol(mid::analyzer::Symbol *symbol) override;
     };
 
     class VariableDefAST : public BaseAST {
@@ -156,6 +169,8 @@ namespace RJIT::AST {
         }
 
         void Dump(mid::Dumper *) override;
+
+        void Symbol(mid::analyzer::Symbol *symbol) override;
     };
 
     // Binary statement
@@ -177,6 +192,8 @@ namespace RJIT::AST {
         const std::string &getOpStr() const { return op_str; }
 
         void Dump(mid::Dumper *) override;
+
+        void Symbol(mid::analyzer::Symbol *symbol) override;
     };
 
     class UnaryAST : public BaseAST {
@@ -192,6 +209,8 @@ namespace RJIT::AST {
         ASTPtr &getOperand() { return operand; }
 
         void Dump(mid::Dumper *) override;
+
+        void Symbol(mid::analyzer::Symbol *symbol) override;
     };
 
     class ReturnAST : public BaseAST {
@@ -204,6 +223,8 @@ namespace RJIT::AST {
         ASTPtr &getReturn() { return retVal; }
 
         void Dump(mid::Dumper *) override;
+
+        void Symbol(mid::analyzer::Symbol *symbol) override;
     };
 
     // statement block
@@ -217,6 +238,8 @@ namespace RJIT::AST {
         const ASTPtrList &getStmts() const { return stmts; }
 
         void Dump(mid::Dumper *) override;
+
+        void Symbol(mid::analyzer::Symbol *symbol) override;
     };
 
     // if-else statement
@@ -235,6 +258,8 @@ namespace RJIT::AST {
         ASTPtr &getElse() { return else_; }
 
         void Dump(mid::Dumper *) override;
+
+        void Symbol(mid::analyzer::Symbol *symbol) override;
     };
 
     class WhileAST : public BaseAST {
@@ -249,6 +274,8 @@ namespace RJIT::AST {
         ASTPtr &getBlock() { return block; }
 
         void Dump(mid::Dumper *) override;
+
+        void Symbol(mid::analyzer::Symbol *symbol) override;
     };
 
     class CallAST : public BaseAST {
@@ -264,6 +291,8 @@ namespace RJIT::AST {
         ASTPtrList &getArgs() { return args; }
 
         void Dump(mid::Dumper *) override;
+
+        void Symbol(mid::analyzer::Symbol *symbol_) override;
     };
 
     class ProtoTypeAST : public BaseAST {
@@ -285,7 +314,9 @@ namespace RJIT::AST {
 
         const std::string &getReturnType() const { return type_str; }
 
-        void Dump(mid::Dumper *);
+        void Dump(mid::Dumper *) override;
+
+        void Symbol(mid::analyzer::Symbol *symbol) override;
     };
 
     class FunctionDefAST : public BaseAST {
@@ -300,7 +331,9 @@ namespace RJIT::AST {
 
         ASTPtr &getBody() { return body; }
 
-        void Dump(mid::Dumper *);
+        void Dump(mid::Dumper *) override;
+
+        void Symbol(mid::analyzer::Symbol *symbol) override;
     };
 
     class PrimTypeAST : public BaseAST {
@@ -314,6 +347,8 @@ namespace RJIT::AST {
         std::string getTypeStr() override { return TYPE::type2String(type); }
 
         void Dump(mid::Dumper *) override;
+
+        void Symbol(mid::analyzer::Symbol *symbol) override;
     };
 
     typedef std::unique_ptr<PrimTypeAST> PrimASTPtr;
@@ -332,6 +367,8 @@ namespace RJIT::AST {
         const std::string &getIdentifier() const { return identifier; }
 
         void Dump(mid::Dumper *) override;
+
+        void Symbol(mid::analyzer::Symbol *symbol) override;
     };
 
     template<typename T, typename... Args>
