@@ -11,39 +11,39 @@ namespace RJIT::mid {
     public:
         Visitor() = default;
 
-        virtual void visit(IntAST *) = 0;
+        virtual void visit(IntAST *) {};
 
-        virtual void visit(CharAST *) = 0;
+        virtual void visit(CharAST *) {};
 
-        virtual void visit(StringAST *) = 0;
+        virtual void visit(StringAST *) {};
 
-        virtual void visit(VariableAST *) = 0;
+        virtual void visit(VariableAST *) {};
 
-        virtual void visit(VariableDeclAST *) = 0;
+        virtual void visit(VariableDeclAST *) {};
 
-        virtual void visit(VariableDefAST *) = 0;
+        virtual void visit(VariableDefAST *) {};
 
-        virtual void visit(BinaryAST *) = 0;
+        virtual void visit(BinaryAST *) {};
 
-        virtual void visit(UnaryAST *) = 0;
+        virtual void visit(UnaryAST *) {};
 
-        virtual void visit(ReturnAST *) = 0;
+        virtual void visit(ReturnAST *) {};
 
-        virtual void visit(BlockAST *) = 0;
+        virtual void visit(BlockAST *) {};
 
-        virtual void visit(IfElseAST *) = 0;
+        virtual void visit(IfElseAST *) {};
 
-        virtual void visit(WhileAST *) = 0;
+        virtual void visit(WhileAST *) {};
 
-        virtual void visit(CallAST *) = 0;
+        virtual void visit(CallAST *) {};
 
-        virtual void visit(FunctionDefAST *) = 0;
+        virtual void visit(FunctionDefAST *) {};
 
-        virtual void visit(ProtoTypeAST *) = 0;
+        virtual void visit(ProtoTypeAST *) {};
 
-        virtual void visit(FuncParamAST *) = 0;
+        virtual void visit(FuncParamAST *) {};
 
-        virtual void visit(PrimTypeAST *) = 0;
+        virtual void visit(PrimTypeAST *) {};
 
     };
 }

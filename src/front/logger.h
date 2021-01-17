@@ -24,6 +24,8 @@ namespace RJIT::front {
 
         void LogError(const std::string &) const;
 
+        void LogError(const std::string &, const std::string &) const;
+
         void LogWarning(const std::string &) const;
 
         void LogInfo(const std::string &) const;

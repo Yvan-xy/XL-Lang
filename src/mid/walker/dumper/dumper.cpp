@@ -105,7 +105,7 @@ namespace RJIT::mid {
             i->Dump(this);
             if (i != *tail) os << ", ";
         }
-        os << ") " << node->getReturnType() << " ";
+        os << ") " << node->getReturnTypeStr() << " ";
     }
 
     void Dumper::visit(FunctionDefAST *node) {

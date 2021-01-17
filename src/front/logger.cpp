@@ -7,6 +7,7 @@ namespace RJIT::front {
     std::string_view filename;
 
     int64_t  Logger::error_num = 0, Logger::warn_num = 0;
+
     void setFilename(const std::string &file) {
         filename = file;
     }
@@ -19,6 +20,17 @@ namespace RJIT::front {
                   << position << ": "
                   << red << "error: " << def
                   << info << std::endl;
+        error_num++;
+    }
+
+    void Logger::LogError(const std::string &info, const std::string &id) const {
+        auto red = Color::Modifier(Color::Code::FG_RED);
+        auto def = Color::Modifier(Color::Code::FG_DEFAULT);
+        std::cerr << filename << ":"
+                  << line << ":"
+                  << position << ": "
+                  << red << "error: " << def
+                  << "id: \"" << id << "\", " << info << std::endl;
         error_num++;
     }
 
@@ -42,4 +54,5 @@ namespace RJIT::front {
                   << yel << "info: " << def
                   << info << std::endl;
     }
+
 }

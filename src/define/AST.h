@@ -12,11 +12,14 @@
 namespace RJIT::mid {
     class Dumper;
     namespace analyzer {
-        class Symbol;
+        class SemAnalyzer;
     }
 }
 
+
 namespace RJIT::AST {
+    using TYPE::TypeInfoPtr;
+
     enum class Operator {
         Add,
         Sub,
@@ -57,19 +60,24 @@ namespace RJIT::AST {
     class BaseAST {
     private:
         front::LoggerPtr logger;
+        TypeInfoPtr ast_type;
 
     public:
+        virtual ~BaseAST() = default;
+
         void setLogger(front::LoggerPtr logger_) { logger = std::move(logger_); }
+
+        const TypeInfoPtr &set_ast_type(const TypeInfoPtr &ast_type_) {
+            return ast_type = ast_type_;
+        }
 
         front::LoggerPtr &Logger() { return logger; }
 
         virtual std::string getTypeStr() { return ""; }
 
-        virtual ~BaseAST() = default;
-
         virtual void Dump(mid::Dumper *) = 0;
 
-        virtual void Symbol(mid::analyzer::Symbol *symbol) = 0;
+        virtual TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) = 0;
     };
 
     typedef std::unique_ptr<BaseAST> ASTPtr;
@@ -86,7 +94,7 @@ namespace RJIT::AST {
 
         void Dump(mid::Dumper *) override;
 
-        void Symbol(mid::analyzer::Symbol *symbol) override;
+        TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
     };
 
 
@@ -101,7 +109,7 @@ namespace RJIT::AST {
 
         void Dump(mid::Dumper *) override;
 
-        void Symbol(mid::analyzer::Symbol *symbol) override;
+        TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
     };
 
     class StringAST : public BaseAST {
@@ -115,7 +123,7 @@ namespace RJIT::AST {
 
         void Dump(mid::Dumper *) override;
 
-        void Symbol(mid::analyzer::Symbol *symbol) override;
+        TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
     };
 
     class VariableAST : public BaseAST {
@@ -129,22 +137,45 @@ namespace RJIT::AST {
 
         void Dump(mid::Dumper *) override;
 
-        void Symbol(mid::analyzer::Symbol *symbol) override;
+        TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
     };
 
-    class VariableDeclAST : public BaseAST {
+    class PrimTypeAST : public BaseAST {
     private:
-        ASTPtr type;
-        ASTPtrList defs;
+        using Type = RJIT::TYPE::Type;
+        Type type;
 
     public:
-        VariableDeclAST(ASTPtr type_, ASTPtrList defs_) : type(std::move(type_)), defs(std::move(defs_)) {}
+        explicit PrimTypeAST(Type type_) : type(type_) {}
 
-        ASTPtrList &getDefs() { return defs; }
+        Type getType() const { return type; }
+
+        std::string getTypeStr() override { return TYPE::type2String(type); }
 
         void Dump(mid::Dumper *) override;
 
-        void Symbol(mid::analyzer::Symbol *symbol) override;
+        TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+    };
+
+    typedef std::unique_ptr<PrimTypeAST> PrimASTPtr;
+
+    class VariableDeclAST : public BaseAST {
+    private:
+        PrimASTPtr type;
+        ASTPtrList defs;
+
+    public:
+        VariableDeclAST(PrimASTPtr type_, ASTPtrList defs_) : type(std::move(type_)), defs(std::move(defs_)) {}
+
+        ASTPtrList &getDefs() { return defs; }
+
+        PrimASTPtr &getType() { return type; }
+
+        TYPE::Type getPrimeType() const { return type->getType(); }
+
+        void Dump(mid::Dumper *) override;
+
+        TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
     };
 
     class VariableDefAST : public BaseAST {
@@ -170,7 +201,7 @@ namespace RJIT::AST {
 
         void Dump(mid::Dumper *) override;
 
-        void Symbol(mid::analyzer::Symbol *symbol) override;
+        TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
     };
 
     // Binary statement
@@ -191,9 +222,11 @@ namespace RJIT::AST {
 
         const std::string &getOpStr() const { return op_str; }
 
+        Operator getOp() const { return op; }
+
         void Dump(mid::Dumper *) override;
 
-        void Symbol(mid::analyzer::Symbol *symbol) override;
+        TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
     };
 
     class UnaryAST : public BaseAST {
@@ -210,7 +243,7 @@ namespace RJIT::AST {
 
         void Dump(mid::Dumper *) override;
 
-        void Symbol(mid::analyzer::Symbol *symbol) override;
+        TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
     };
 
     class ReturnAST : public BaseAST {
@@ -224,7 +257,7 @@ namespace RJIT::AST {
 
         void Dump(mid::Dumper *) override;
 
-        void Symbol(mid::analyzer::Symbol *symbol) override;
+        TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
     };
 
     // statement block
@@ -239,7 +272,7 @@ namespace RJIT::AST {
 
         void Dump(mid::Dumper *) override;
 
-        void Symbol(mid::analyzer::Symbol *symbol) override;
+        TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
     };
 
     // if-else statement
@@ -259,7 +292,7 @@ namespace RJIT::AST {
 
         void Dump(mid::Dumper *) override;
 
-        void Symbol(mid::analyzer::Symbol *symbol) override;
+        TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
     };
 
     class WhileAST : public BaseAST {
@@ -275,7 +308,7 @@ namespace RJIT::AST {
 
         void Dump(mid::Dumper *) override;
 
-        void Symbol(mid::analyzer::Symbol *symbol) override;
+        TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
     };
 
     class CallAST : public BaseAST {
@@ -292,7 +325,7 @@ namespace RJIT::AST {
 
         void Dump(mid::Dumper *) override;
 
-        void Symbol(mid::analyzer::Symbol *symbol_) override;
+        TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
     };
 
     class ProtoTypeAST : public BaseAST {
@@ -303,8 +336,8 @@ namespace RJIT::AST {
         std::string type_str;
 
     public:
-        ProtoTypeAST(std::string name, ASTPtrList args_, TYPE::Type type_) : funcName(std::move(name)),
-                                                                             args(std::move(args_)), type(type_) {
+        ProtoTypeAST(std::string name, ASTPtrList args_, TYPE::Type type_) :
+                funcName(std::move(name)), args(std::move(args_)), type(type_) {
             type_str = TYPE::type2String(type);
         }
 
@@ -312,11 +345,13 @@ namespace RJIT::AST {
 
         ASTPtrList &getArgs() { return args; }
 
-        const std::string &getReturnType() const { return type_str; }
+        const std::string &getReturnTypeStr() const { return type_str; }
+
+        TYPE::Type getReturnType() const { return type; }
 
         void Dump(mid::Dumper *) override;
 
-        void Symbol(mid::analyzer::Symbol *symbol) override;
+        TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
     };
 
     class FunctionDefAST : public BaseAST {
@@ -333,25 +368,8 @@ namespace RJIT::AST {
 
         void Dump(mid::Dumper *) override;
 
-        void Symbol(mid::analyzer::Symbol *symbol) override;
+        TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
     };
-
-    class PrimTypeAST : public BaseAST {
-    private:
-        using Type = RJIT::TYPE::Type;
-        Type type;
-
-    public:
-        explicit PrimTypeAST(Type type_) : type(type_) {}
-
-        std::string getTypeStr() override { return TYPE::type2String(type); }
-
-        void Dump(mid::Dumper *) override;
-
-        void Symbol(mid::analyzer::Symbol *symbol) override;
-    };
-
-    typedef std::unique_ptr<PrimTypeAST> PrimASTPtr;
 
     class FuncParamAST : public BaseAST {
     private:
@@ -364,11 +382,13 @@ namespace RJIT::AST {
 
         std::string getTypeStr() override { return type->getTypeStr(); }
 
+        ASTPtr &getType() { return type; }
+
         const std::string &getIdentifier() const { return identifier; }
 
         void Dump(mid::Dumper *) override;
 
-        void Symbol(mid::analyzer::Symbol *symbol) override;
+        TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
     };
 
     template<typename T, typename... Args>
@@ -377,6 +397,8 @@ namespace RJIT::AST {
         ast->setLogger(std::move(logger));
         return ast;
     }
+
+    PrimASTPtr MakePrimeAST(front::LoggerPtr logger, TYPE::Type type);
 
 }// namespace RJIT::AST
 

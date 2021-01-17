@@ -1,5 +1,7 @@
 #include "AST.h"
 #include "type.h"
+#include <sstream>
+
 
 namespace RJIT::AST {
     Operator string2Operator(const std::string &op) {
@@ -165,11 +167,56 @@ namespace RJIT::TYPE {
                 return "int";
             case Type::String:
                 return "string";
-            case Type::Const:
-                return "const";
             case Type::Dam:
                 return "";
         }
+    }
+
+    std::string PrimType::GetTypeId() const {
+        return type2String(this->type_);
+    }
+
+    TypeInfoPtr PrimType::GetValueType(bool is_right) const {
+        return std::make_shared<PrimType>(type_, is_right);
+    }
+
+    std::size_t PrimType::GetSize() const {
+        switch (type_) {
+            case Type::Int8:
+            case Type::UInt8:
+                return 1;
+            case Type::Int32:
+            case Type::UInt32:
+                return 4;
+            default:
+                return 0;
+        }
+    }
+
+    std::string ConstType::GetTypeId() const {
+        return this->type->GetTypeId();
+    }
+
+    TypeInfoPtr ConstType::GetValueType(bool is_right) const {
+        auto type_ = type->GetValueType(is_right);
+        return std::make_shared<ConstType>(std::move(type_));
+    }
+
+    std::string FuncType::GetTypeId() const {
+        std::ostringstream oss;
+        oss << '$' << args_.size() << 'f';
+        for (const auto &i : args_) oss << i->GetTypeId();
+        oss << '$';
+        oss << ret_->GetTypeId();
+        return oss.str();
+    }
+
+    TypeInfoPtr FuncType::GetValueType(bool is_right) const {
+        return std::make_shared<FuncType>(args_, ret_, is_right);
+    }
+
+    TypeInfoPtr FuncType::GetReturnType(const TypePtrList &args) const {
+        return ret_;
     }
 
 }

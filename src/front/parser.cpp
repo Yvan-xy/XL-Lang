@@ -5,8 +5,7 @@
 using namespace RJIT::TYPE;
 
 namespace RJIT::front {
-    static const std::string UnaryOperator[] = {
-            "!", "-", "@", "$", "%", "^"};
+    static const std::string UnaryOperator[] = {"!", "-", "@", "$", "%", "^"};
 
     void Parser::setPrecedence() {
         BinopPrecedence["="] = 2;
@@ -99,6 +98,8 @@ namespace RJIT::front {
     bool Parser::isEqualSign() {
         if (curToken.isOper() && curToken.getOperValue() == "=") {
             return true;
+        } else if (curToken.isOper() && curToken.getOperValue().length() > 1) {
+            if (curToken.getOperValue()[1] == '=') return true;
         }
         return false;
     }
@@ -252,7 +253,7 @@ namespace RJIT::front {
 
         auto log = logger();
         auto type = string2Type(curToken.getKeywordValue());
-        ASTPtr typeASTPtr = MakeAST<PrimTypeAST>(std::move(log), type);
+        PrimASTPtr typeASTPtr = MakePrimeAST(std::move(log), type);
 
         nextToken();// eat type
         if (!isSemicolon()) {

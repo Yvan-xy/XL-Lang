@@ -118,12 +118,15 @@ namespace RJIT::front {
         void DumpAST() {
             RJIT::mid::Dumper dumper(std::cout);
             rootNode->Dump(reinterpret_cast<mid::Dumper *>(&dumper));
+            std::cout << std::endl;
         }
 
         LoggerPtr logger() {
             auto log = std::make_unique<front::Logger>(curToken.getLineNumber(), curToken.getPosition());
             return log;
         }
+
+        ASTPtr &ast() { return rootNode; }
     };
 
 }

@@ -1,13 +1,21 @@
 #include "AST.h"
 #include "mid/walker/dumper/dumper.h"
-#include "mid/walker/analyzer/symbol.h"
+#include "mid/walker/analyzer/sema.h"
 
 #include <iostream>
 
 using namespace std;
+using namespace RJIT::TYPE;
 using namespace RJIT::mid;
+using namespace RJIT::mid::analyzer;
 
 namespace RJIT::AST {
+    PrimASTPtr MakePrimeAST(front::LoggerPtr logger, TYPE::Type type) {
+        PrimASTPtr ast = std::make_unique<PrimTypeAST>(type);
+        ast->setLogger(std::move(logger));
+        return ast;
+    }
+
     void IntAST::Dump(Dumper *dumper) {
         dumper->visit(this);
     }
@@ -78,72 +86,72 @@ namespace RJIT::AST {
         dumper->visit(this);
     }
 
-    void IntAST::Symbol(mid::analyzer::Symbol *symbol) {
-        symbol->visit(this);
+    TypeInfoPtr IntAST::SemAnalyze(SemAnalyzer *analyzer) {
+        return analyzer->SemAnalyze(this);
     }
 
-    void CharAST::Symbol(mid::analyzer::Symbol *symbol) {
-        symbol->visit(this);
+    TypeInfoPtr CharAST::SemAnalyze(SemAnalyzer *analyzer) {
+        return analyzer->SemAnalyze(this);
     }
 
-    void StringAST::Symbol(mid::analyzer::Symbol *symbol) {
-        symbol->visit(this);
+    TypeInfoPtr StringAST::SemAnalyze(SemAnalyzer *analyzer) {
+        return analyzer->SemAnalyze(this);
     }
 
-    void VariableAST::Symbol(mid::analyzer::Symbol *symbol) {
-        symbol->visit(this);
+    TypeInfoPtr VariableAST::SemAnalyze(SemAnalyzer *analyzer) {
+        return analyzer->SemAnalyze(this);
     }
 
-    void VariableDeclAST::Symbol(mid::analyzer::Symbol *symbol) {
-        symbol->visit(this);
+    TypeInfoPtr VariableDeclAST::SemAnalyze(SemAnalyzer *analyzer) {
+        return analyzer->SemAnalyze(this);
     }
 
-    void VariableDefAST::Symbol(mid::analyzer::Symbol *symbol) {
-        symbol->visit(this);
+    TypeInfoPtr VariableDefAST::SemAnalyze(SemAnalyzer *analyzer) {
+        return analyzer->SemAnalyze(this);
     }
 
-    void BinaryAST::Symbol(mid::analyzer::Symbol *symbol) {
-        symbol->visit(this);
+    TypeInfoPtr BinaryAST::SemAnalyze(SemAnalyzer *analyzer) {
+        return analyzer->SemAnalyze(this);
     }
 
-    void UnaryAST::Symbol(mid::analyzer::Symbol *symbol) {
-        symbol->visit(this);
+    TypeInfoPtr UnaryAST::SemAnalyze(SemAnalyzer *analyzer) {
+        return analyzer->SemAnalyze(this);
     }
 
-    void ReturnAST::Symbol(mid::analyzer::Symbol *symbol) {
-        symbol->visit(this);
+    TypeInfoPtr ReturnAST::SemAnalyze(SemAnalyzer *analyzer) {
+        return analyzer->SemAnalyze(this);
     }
 
-    void BlockAST::Symbol(mid::analyzer::Symbol *symbol) {
-        symbol->visit(this);
+    TypeInfoPtr BlockAST::SemAnalyze(SemAnalyzer *analyzer) {
+        return analyzer->SemAnalyze(this);
     }
 
-    void IfElseAST::Symbol(mid::analyzer::Symbol *symbol) {
-        symbol->visit(this);
+    TypeInfoPtr IfElseAST::SemAnalyze(SemAnalyzer *analyzer) {
+        return analyzer->SemAnalyze(this);
     }
 
-    void WhileAST::Symbol(mid::analyzer::Symbol *symbol) {
-        symbol->visit(this);
+    TypeInfoPtr WhileAST::SemAnalyze(SemAnalyzer *analyzer) {
+        return analyzer->SemAnalyze(this);
     }
 
-    void CallAST::Symbol(mid::analyzer::Symbol *symbol_) {
-        symbol_->visit(this);
+    TypeInfoPtr CallAST::SemAnalyze(SemAnalyzer *analyzer) {
+        return analyzer->SemAnalyze(this);
     }
 
-    void ProtoTypeAST::Symbol(mid::analyzer::Symbol *symbol) {
-        symbol->visit(this);
+    TypeInfoPtr ProtoTypeAST::SemAnalyze(SemAnalyzer *analyzer) {
+        return analyzer->SemAnalyze(this);
     }
 
-    void FunctionDefAST::Symbol(mid::analyzer::Symbol *symbol) {
-        symbol->visit(this);
+    TypeInfoPtr FunctionDefAST::SemAnalyze(SemAnalyzer *analyzer) {
+        return analyzer->SemAnalyze(this);
     }
 
-    void PrimTypeAST::Symbol(mid::analyzer::Symbol *symbol) {
-        symbol->visit(this);
+    TypeInfoPtr PrimTypeAST::SemAnalyze(SemAnalyzer *analyzer) {
+        return analyzer->SemAnalyze(this);
     }
 
-    void FuncParamAST::Symbol(mid::analyzer::Symbol *symbol) {
-        symbol->visit(this);
+    TypeInfoPtr FuncParamAST::SemAnalyze(SemAnalyzer *analyzer) {
+        return analyzer->SemAnalyze(this);
     }
 
 }

@@ -99,7 +99,8 @@ namespace RJIT::front {
             bool isChar = false, isString = false;
 
             /* Check if >=, <=, ==, != */
-            if (ch == '=' || ch == '>' || ch == '<' || ch == '!') {
+            if (ch == '=' || ch == '>' || ch == '<' || ch == '!'
+                || ch == '+' || ch == '-' || ch == '*' || ch == '/') {
                 eat = false;
                 nextChar();
                 if (ch == '=') {
@@ -129,7 +130,7 @@ namespace RJIT::front {
                     if (isEOF()) {
                         LogError(__LINE__, __FILE__, "Expect a \" here");
                     }
-                } while(ch != '"');
+                } while (ch != '"');
             }
 
             if (eat) {
@@ -139,13 +140,13 @@ namespace RJIT::front {
                 token.setToken(TokenType::Char, value, curLine, curPos);
             } else if (isString) {
                 token.setToken(TokenType::String, value, curLine, curPos);
-            }
-            else {
+            } else {
                 token.setToken(TokenType::Operator, value, curLine, curPos);
             }
         }
 
-        token.dump();
+//        token.dump();
+
         return token;
     }
 
@@ -166,4 +167,5 @@ namespace RJIT::front {
                   << def << info << std::endl;
         exit(-1);
     }
+
 }   // RJIT::front

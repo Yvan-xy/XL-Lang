@@ -32,6 +32,8 @@ namespace RJIT::lib {
             // get item
             V GetItem(const K &key, bool recursive) const;
 
+            V GetItem(const K &key) const { return GetItem(key, true); }
+
             // remove item
             bool RemoveItem(const K &key, bool recursive);
 
