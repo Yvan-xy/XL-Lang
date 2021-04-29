@@ -1,7 +1,8 @@
 #include <cassert>
 #include "parser.h"
-#include "define/color.h"
+#include "lib/debug.h"
 #include "define/type.h"
+#include "define/color.h"
 
 using namespace RJIT::TYPE;
 
@@ -45,6 +46,20 @@ namespace RJIT::front {
     int prec = BinopPrecedence[curToken.getOperValue()];
     if (prec <= 0) return -1;
     return prec;
+  }
+
+  bool Parser::isIncrement() {
+    if (curToken.isOper() && curToken.getOperValue() == "++") {
+      return true;
+    }
+    return false;
+  }
+
+  bool Parser::isDecrement() {
+    if (curToken.isOper() && curToken.getOperValue() == "--") {
+      return true;
+    }
+    return false;
   }
 
   bool Parser::isLeftBrace() {
@@ -374,15 +389,37 @@ namespace RJIT::front {
     if (!isLeftParentheses()) {
       auto log = logger();
       ASTPtr varAST = MakeAST<VariableAST>(std::move(log), identName);
-      if (!isEqualSign()) {
+      if (!isEqualSign() && !isIncrement() && !isDecrement()) {
         return varAST;
-      } else {
+      } else if (isIncrement()) {
+        auto intVal = MakeAST<IntAST>(logger(), 1);
+
+        nextToken(); // eat '++'
+        if (!isSemicolon()) {
+          LogError("Expect a ';' here.");
+        }
+        nextToken();// eat ;
+
+        return MakeAST<BinaryStmt>(std::move(log), Operator::Add, std::move(varAST), std::move(intVal));
+      } else if (isDecrement()) {
+        auto intVal = MakeAST<IntAST>(logger(), 1);
+
+        nextToken(); // eat '--'
+        if (!isSemicolon()) {
+          LogError("Expect a ';' here.");
+        }
+        nextToken();// eat ;
+
+        return MakeAST<BinaryStmt>(std::move(log), Operator::Sub, std::move(varAST), std::move(intVal));
+      } else if (isEqualSign()) {
         ASTPtr assignAST = ParseBinaryOPRHS(0, std::move(varAST));
         if (!isSemicolon()) {
           LogError("Expect a ';' here.");
         }
         nextToken();// eat ;
         return assignAST;
+      } else {
+        DBG_WARN(1, "unknown operator here");
       }
     }
 

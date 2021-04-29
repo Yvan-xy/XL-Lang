@@ -170,6 +170,7 @@ namespace RJIT::TYPE {
       case Type::Dam:
         return "";
     }
+    return "";
   }
 
   std::string PrimType::GetTypeId() const {

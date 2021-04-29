@@ -106,6 +106,9 @@ namespace RJIT::front {
         if (ch == '=') {
           value += ch;
           eat = true;
+        } else if (ch == '+' || ch == '-') {
+          value += ch;
+          eat = true;
         }
       } else if (ch == '\'') {    // char token
         eat = true;

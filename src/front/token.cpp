@@ -58,6 +58,7 @@ namespace RJIT::front {
       case TokenType::END:
         return "";
     }
+    return "";
   }
 
   std::string Token::type2String() {

@@ -88,6 +88,10 @@ namespace RJIT::AST {
 
   };
 
+  class TranslationUnitDecl : public Decl {
+
+  };
+
   typedef std::unique_ptr<BaseAST> ASTPtr;
   typedef std::vector<ASTPtr> ASTPtrList;
 

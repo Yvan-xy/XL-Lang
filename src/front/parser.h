@@ -25,6 +25,10 @@ namespace RJIT::front {
 
     int getPrecedence();
 
+    bool isIncrement();
+
+    bool isDecrement();
+
     bool isLeftParentheses();
 
     bool isRightParentheses();

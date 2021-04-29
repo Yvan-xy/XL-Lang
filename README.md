@@ -3,7 +3,7 @@
 ## EBNF of RJitLang
 
 ```ebnf
-comp_unit ::= [comp_unit](declation | func_def)
+trans_unit ::= [trans_unit](declation | func_def)
 declation ::= var_decl
 var_decl ::= "var" var_def {',' var_def} ':' prime_type';'
 var_def ::= ident ['=' init_value]
