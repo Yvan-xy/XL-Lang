@@ -5,47 +5,51 @@
 
 
 namespace RJIT::mid {
-    using namespace RJIT::AST;
+  using namespace RJIT::AST;
 
-    class Visitor {
-    public:
-        Visitor() = default;
+  class Visitor {
+  public:
+    Visitor() = default;
 
-        virtual void visit(IntAST *) {};
+    virtual void visit(IntAST *) {};
 
-        virtual void visit(CharAST *) {};
+    virtual void visit(CharAST *) {};
 
-        virtual void visit(StringAST *) {};
+    virtual void visit(StringAST *) {};
 
-        virtual void visit(VariableAST *) {};
+    virtual void visit(VariableAST *) {};
 
-        virtual void visit(VariableDeclAST *) {};
+    virtual void visit(VariableDecl *) {};
 
-        virtual void visit(VariableDefAST *) {};
+    virtual void visit(VariableDefAST *) {};
 
-        virtual void visit(BinaryAST *) {};
+    virtual void visit(BinaryStmt *) {};
 
-        virtual void visit(UnaryAST *) {};
+    virtual void visit(UnaryStmt *) {};
 
-        virtual void visit(ReturnAST *) {};
+    virtual void visit(ReturnStmt *) {};
 
-        virtual void visit(BlockAST *) {};
+    virtual void visit(BreakStmt *) {};
 
-        virtual void visit(IfElseAST *) {};
+    virtual void visit(ContinueStmt *) {};
 
-        virtual void visit(WhileAST *) {};
+    virtual void visit(CompoundStmt *) {};
 
-        virtual void visit(CallAST *) {};
+    virtual void visit(IfElseStmt *) {};
 
-        virtual void visit(FunctionDefAST *) {};
+    virtual void visit(WhileStmt *) {};
 
-        virtual void visit(ProtoTypeAST *) {};
+    virtual void visit(CallStmt *) {};
 
-        virtual void visit(FuncParamAST *) {};
+    virtual void visit(FunctionDefAST *) {};
 
-        virtual void visit(PrimTypeAST *) {};
+    virtual void visit(ProtoTypeAST *) {};
 
-    };
+    virtual void visit(FuncParamAST *) {};
+
+    virtual void visit(PrimTypeAST *) {};
+
+  };
 }
 
 #endif //RJIT_VISITOR_H

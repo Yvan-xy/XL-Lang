@@ -11,13 +11,13 @@ using namespace RJIT::front;
 using namespace RJIT::mid::analyzer;
 
 int main(int argc, char *argv[]) {
-    Lexer lexer("a.c");
-    Parser parser(&lexer);
-    parser.Parse();
-    parser.DumpAST();
+  Lexer lexer("a.c");
+  Parser parser(&lexer);
+  parser.Parse();
+  parser.DumpAST();
 
-    SemAnalyzer semAnalyzer(parser.ast());
-    semAnalyzer.Analyze();
+  SemAnalyzer semAnalyzer(parser.ast());
+  semAnalyzer.Analyze();
 
 //    RJIT::lib::Nested::NestedMapPtr<int, int *> ptr = MakeNestedMap<int, int *>();
 //    for (int i = 1; i < 10; i++) {

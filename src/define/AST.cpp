@@ -10,148 +10,148 @@ using namespace RJIT::mid;
 using namespace RJIT::mid::analyzer;
 
 namespace RJIT::AST {
-    PrimASTPtr MakePrimeAST(front::LoggerPtr logger, TYPE::Type type) {
-        PrimASTPtr ast = std::make_unique<PrimTypeAST>(type);
-        ast->setLogger(std::move(logger));
-        return ast;
-    }
+  PrimASTPtr MakePrimeAST(front::LoggerPtr logger, TYPE::Type type) {
+    PrimASTPtr ast = std::make_unique<PrimTypeAST>(type);
+    ast->setLogger(std::move(logger));
+    return ast;
+  }
 
-    void IntAST::Dump(Dumper *dumper) {
-        dumper->visit(this);
-    }
+  void IntAST::Dump(Dumper *dumper) {
+    dumper->visit(this);
+  }
 
-    void CharAST::Dump(Dumper *dumper) {
-        dumper->visit(this);
-    }
+  void CharAST::Dump(Dumper *dumper) {
+    dumper->visit(this);
+  }
 
-    void StringAST::Dump(Dumper *dumper) {
-        dumper->visit(this);
-    }
+  void StringAST::Dump(Dumper *dumper) {
+    dumper->visit(this);
+  }
 
-    void VariableAST::Dump(Dumper *dumper) {
-        dumper->visit(this);
-    }
+  void VariableAST::Dump(Dumper *dumper) {
+    dumper->visit(this);
+  }
 
-    void VariableDeclAST::Dump(Dumper *dumper) {
-        dumper->visit(this);
-    }
+  void VariableDecl::Dump(Dumper *dumper) {
+    dumper->visit(this);
+  }
 
-    void VariableDefAST::Dump(Dumper *dumper) {
-        dumper->visit(this);
-    }
+  void VariableDefAST::Dump(Dumper *dumper) {
+    dumper->visit(this);
+  }
 
-    void BinaryAST::Dump(Dumper *dumper) {
-        dumper->visit(this);
+  void BinaryStmt::Dump(Dumper *dumper) {
+    dumper->visit(this);
 
-    }
+  }
 
-    void UnaryAST::Dump(Dumper *dumper) {
-        dumper->visit(this);
+  void UnaryStmt::Dump(Dumper *dumper) {
+    dumper->visit(this);
 
-    }
+  }
 
-    void ReturnAST::Dump(mid::Dumper *dumper) {
-        dumper->visit(this);
-    }
+  void ReturnStmt::Dump(mid::Dumper *dumper) {
+    dumper->visit(this);
+  }
 
-    void BlockAST::Dump(Dumper *dumper) {
-        dumper->visit(this);
-    }
+  void CompoundStmt::Dump(Dumper *dumper) {
+    dumper->visit(this);
+  }
 
-    void IfElseAST::Dump(Dumper *dumper) {
-        dumper->visit(this);
-    }
+  void IfElseStmt::Dump(Dumper *dumper) {
+    dumper->visit(this);
+  }
 
-    void CallAST::Dump(Dumper *dumper) {
-        dumper->visit(this);
-    }
+  void CallStmt::Dump(Dumper *dumper) {
+    dumper->visit(this);
+  }
 
-    void ProtoTypeAST::Dump(Dumper *dumper) {
-        dumper->visit(this);
-    }
+  void ProtoTypeAST::Dump(Dumper *dumper) {
+    dumper->visit(this);
+  }
 
-    void FunctionDefAST::Dump(Dumper *dumper) {
-        dumper->visit(this);
-    }
+  void FunctionDefAST::Dump(Dumper *dumper) {
+    dumper->visit(this);
+  }
 
-    void FuncParamAST::Dump(Dumper *dumper) {
-        dumper->visit(this);
-    }
+  void FuncParamAST::Dump(Dumper *dumper) {
+    dumper->visit(this);
+  }
 
-    void PrimTypeAST::Dump(Dumper *dumper) {
-        dumper->visit(this);
-    }
+  void PrimTypeAST::Dump(Dumper *dumper) {
+    dumper->visit(this);
+  }
 
-    void WhileAST::Dump(Dumper *dumper) {
-        dumper->visit(this);
-    }
+  void WhileStmt::Dump(Dumper *dumper) {
+    dumper->visit(this);
+  }
 
-    TypeInfoPtr IntAST::SemAnalyze(SemAnalyzer *analyzer) {
-        return analyzer->SemAnalyze(this);
-    }
+  TypeInfoPtr IntAST::SemAnalyze(SemAnalyzer *analyzer) {
+    return analyzer->SemAnalyze(this);
+  }
 
-    TypeInfoPtr CharAST::SemAnalyze(SemAnalyzer *analyzer) {
-        return analyzer->SemAnalyze(this);
-    }
+  TypeInfoPtr CharAST::SemAnalyze(SemAnalyzer *analyzer) {
+    return analyzer->SemAnalyze(this);
+  }
 
-    TypeInfoPtr StringAST::SemAnalyze(SemAnalyzer *analyzer) {
-        return analyzer->SemAnalyze(this);
-    }
+  TypeInfoPtr StringAST::SemAnalyze(SemAnalyzer *analyzer) {
+    return analyzer->SemAnalyze(this);
+  }
 
-    TypeInfoPtr VariableAST::SemAnalyze(SemAnalyzer *analyzer) {
-        return analyzer->SemAnalyze(this);
-    }
+  TypeInfoPtr VariableAST::SemAnalyze(SemAnalyzer *analyzer) {
+    return analyzer->SemAnalyze(this);
+  }
 
-    TypeInfoPtr VariableDeclAST::SemAnalyze(SemAnalyzer *analyzer) {
-        return analyzer->SemAnalyze(this);
-    }
+  TypeInfoPtr VariableDecl::SemAnalyze(SemAnalyzer *analyzer) {
+    return analyzer->SemAnalyze(this);
+  }
 
-    TypeInfoPtr VariableDefAST::SemAnalyze(SemAnalyzer *analyzer) {
-        return analyzer->SemAnalyze(this);
-    }
+  TypeInfoPtr VariableDefAST::SemAnalyze(SemAnalyzer *analyzer) {
+    return analyzer->SemAnalyze(this);
+  }
 
-    TypeInfoPtr BinaryAST::SemAnalyze(SemAnalyzer *analyzer) {
-        return analyzer->SemAnalyze(this);
-    }
+  TypeInfoPtr BinaryStmt::SemAnalyze(SemAnalyzer *analyzer) {
+    return analyzer->SemAnalyze(this);
+  }
 
-    TypeInfoPtr UnaryAST::SemAnalyze(SemAnalyzer *analyzer) {
-        return analyzer->SemAnalyze(this);
-    }
+  TypeInfoPtr UnaryStmt::SemAnalyze(SemAnalyzer *analyzer) {
+    return analyzer->SemAnalyze(this);
+  }
 
-    TypeInfoPtr ReturnAST::SemAnalyze(SemAnalyzer *analyzer) {
-        return analyzer->SemAnalyze(this);
-    }
+  TypeInfoPtr ReturnStmt::SemAnalyze(SemAnalyzer *analyzer) {
+    return analyzer->SemAnalyze(this);
+  }
 
-    TypeInfoPtr BlockAST::SemAnalyze(SemAnalyzer *analyzer) {
-        return analyzer->SemAnalyze(this);
-    }
+  TypeInfoPtr CompoundStmt::SemAnalyze(SemAnalyzer *analyzer) {
+    return analyzer->SemAnalyze(this);
+  }
 
-    TypeInfoPtr IfElseAST::SemAnalyze(SemAnalyzer *analyzer) {
-        return analyzer->SemAnalyze(this);
-    }
+  TypeInfoPtr IfElseStmt::SemAnalyze(SemAnalyzer *analyzer) {
+    return analyzer->SemAnalyze(this);
+  }
 
-    TypeInfoPtr WhileAST::SemAnalyze(SemAnalyzer *analyzer) {
-        return analyzer->SemAnalyze(this);
-    }
+  TypeInfoPtr WhileStmt::SemAnalyze(SemAnalyzer *analyzer) {
+    return analyzer->SemAnalyze(this);
+  }
 
-    TypeInfoPtr CallAST::SemAnalyze(SemAnalyzer *analyzer) {
-        return analyzer->SemAnalyze(this);
-    }
+  TypeInfoPtr CallStmt::SemAnalyze(SemAnalyzer *analyzer) {
+    return analyzer->SemAnalyze(this);
+  }
 
-    TypeInfoPtr ProtoTypeAST::SemAnalyze(SemAnalyzer *analyzer) {
-        return analyzer->SemAnalyze(this);
-    }
+  TypeInfoPtr ProtoTypeAST::SemAnalyze(SemAnalyzer *analyzer) {
+    return analyzer->SemAnalyze(this);
+  }
 
-    TypeInfoPtr FunctionDefAST::SemAnalyze(SemAnalyzer *analyzer) {
-        return analyzer->SemAnalyze(this);
-    }
+  TypeInfoPtr FunctionDefAST::SemAnalyze(SemAnalyzer *analyzer) {
+    return analyzer->SemAnalyze(this);
+  }
 
-    TypeInfoPtr PrimTypeAST::SemAnalyze(SemAnalyzer *analyzer) {
-        return analyzer->SemAnalyze(this);
-    }
+  TypeInfoPtr PrimTypeAST::SemAnalyze(SemAnalyzer *analyzer) {
+    return analyzer->SemAnalyze(this);
+  }
 
-    TypeInfoPtr FuncParamAST::SemAnalyze(SemAnalyzer *analyzer) {
-        return analyzer->SemAnalyze(this);
-    }
+  TypeInfoPtr FuncParamAST::SemAnalyze(SemAnalyzer *analyzer) {
+    return analyzer->SemAnalyze(this);
+  }
 
 }

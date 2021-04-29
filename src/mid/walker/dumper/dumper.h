@@ -33,21 +33,25 @@ namespace RJIT::mid {
 
         void visit(VariableAST *) override;
 
-        void visit(VariableDeclAST *) override;
+        void visit(VariableDecl *) override;
 
         void visit(VariableDefAST *) override;
 
-        void visit(BinaryAST *) override;
+        void visit(BinaryStmt *) override;
 
-        void visit(UnaryAST *) override;
+        void visit(UnaryStmt *) override;
 
-        void visit(ReturnAST *) override;
+        void visit(ReturnStmt *) override;
 
-        void visit(BlockAST *) override;
+        void visit(BreakStmt *) override;
 
-        void visit(IfElseAST *) override;
+        void visit(ContinueStmt *) override;
 
-        void visit(CallAST *) override;
+        void visit(CompoundStmt *) override;
+
+        void visit(IfElseStmt *) override;
+
+        void visit(CallStmt *) override;
 
         void visit(ProtoTypeAST *) override;
 
@@ -57,7 +61,7 @@ namespace RJIT::mid {
 
         void visit(PrimTypeAST *) override;
 
-        void visit(WhileAST *) override;
+        void visit(WhileStmt *) override;
     };
 }
 

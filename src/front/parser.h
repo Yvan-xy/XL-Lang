@@ -14,120 +14,120 @@ using namespace RJIT::AST;
 
 namespace RJIT::front {
 
-    class Parser {
-        Token curToken;
-        Lexer *lexer;
-        std::map<std::string, int> BinopPrecedence;
+  class Parser {
+    Token curToken;
+    Lexer *lexer;
+    std::map<std::string, int> BinopPrecedence;
 
-        ASTPtr rootNode;
+    ASTPtr rootNode;
 
-        void setPrecedence();
+    void setPrecedence();
 
-        int getPrecedence();
+    int getPrecedence();
 
-        bool isLeftParentheses();
+    bool isLeftParentheses();
 
-        bool isRightParentheses();
+    bool isRightParentheses();
 
-        bool isComma();
+    bool isComma();
 
-        bool isEqualSign();
+    bool isEqualSign();
 
-        bool isDefine();
+    bool isDefine();
 
-        bool isExtern();
+    bool isExtern();
 
-        bool isIf();
+    bool isIf();
 
-        bool isThen();
+    bool isThen();
 
-        bool isElse();
+    bool isElse();
 
-        bool isFor();
+    bool isFor();
 
-        bool isWhile();
+    bool isWhile();
 
-        bool isReturn();
+    bool isReturn();
 
-        bool isUnary();
+    bool isUnary();
 
-        bool isEnd();
+    bool isEnd();
 
-        bool isIn();
+    bool isIn();
 
-        bool isVar();
+    bool isVar();
 
-        bool isLeftBrace();
+    bool isLeftBrace();
 
-        bool isRightBrace();
+    bool isRightBrace();
 
-        bool isSemicolon();
+    bool isSemicolon();
 
-        bool isColon();
+    bool isColon();
 
-        bool isConst();
+    bool isConst();
 
-        TYPE::Type getType();
+    TYPE::Type getType();
 
-        void nextToken() { curToken = lexer->nextToken(); }
+    void nextToken() { curToken = lexer->nextToken(); }
 
-        ASTPtr LogError(const std::string &info);
+    ASTPtr LogError(const std::string &info);
 
-        ASTPtr ParseParenExpr();
+    ASTPtr ParseParenExpr();
 
-        ASTPtr ParseExpression();
+    ASTPtr ParseExpression();
 
-        ASTPtr ParseUnary();
+    ASTPtr ParseUnary();
 
-        ASTPtr ParseBinaryOPRHS(int prec, ASTPtr lhs);
+    ASTPtr ParseBinaryOPRHS(int prec, ASTPtr lhs);
 
-        ASTPtr ParseVariableDecl();
+    ASTPtr ParseVariableDecl();
 
-        ASTPtr ParsePrimary();
+    ASTPtr ParsePrimary();
 
-        ASTPtr ParseIdentifier();
+    ASTPtr ParseIdentifier();
 
-        ASTPtr ParseVariableDefine();
+    ASTPtr ParseVariableDefine();
 
-        ASTPtr ParseReturn();
+    ASTPtr ParseReturn();
 
-        ASTPtr ParseIfElse();
+    ASTPtr ParseIfElse();
 
-        ASTPtr ParseWhile();
+    ASTPtr ParseWhile();
 
-        ASTPtr ParseConst();
+    ASTPtr ParseConst();
 
-        ASTPtr ParseFunctionDef();
+    ASTPtr ParseFunctionDef();
 
-        ASTPtr ParseBlock();
+    ASTPtr ParseBlock();
 
-        ASTPtr ParseTop();
+    ASTPtr ParseTop();
 
-    public:
-        Parser() = default;
+  public:
+    Parser() = default;
 
-        explicit Parser(Lexer *lexer_) : lexer(lexer_) {
-            setFilename(lexer->GetFilename());
-            setPrecedence();
-            nextToken();    // Load first token
-        }
+    explicit Parser(Lexer *lexer_) : lexer(lexer_) {
+      setFilename(lexer->GetFilename());
+      setPrecedence();
+      nextToken();    // Load first token
+    }
 
 
-        void Parse();
+    void Parse();
 
-        void DumpAST() {
-            RJIT::mid::Dumper dumper(std::cout);
-            rootNode->Dump(reinterpret_cast<mid::Dumper *>(&dumper));
-            std::cout << std::endl;
-        }
+    void DumpAST() {
+      RJIT::mid::Dumper dumper(std::cout);
+      rootNode->Dump(reinterpret_cast<mid::Dumper *>(&dumper));
+      std::cout << std::endl;
+    }
 
-        LoggerPtr logger() {
-            auto log = std::make_unique<front::Logger>(curToken.getLineNumber(), curToken.getPosition());
-            return log;
-        }
+    LoggerPtr logger() {
+      auto log = std::make_unique<front::Logger>(curToken.getLineNumber(), curToken.getPosition());
+      return log;
+    }
 
-        ASTPtr &ast() { return rootNode; }
-    };
+    ASTPtr &ast() { return rootNode; }
+  };
 
 }
 

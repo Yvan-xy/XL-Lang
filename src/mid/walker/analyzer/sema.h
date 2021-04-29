@@ -12,64 +12,68 @@ using namespace RJIT::TYPE;
 using namespace RJIT::front;
 
 namespace RJIT::mid::analyzer {
-    using EnvPtr = lib::Nested::NestedMapPtr<std::string, TypeInfoPtr>;
+  using EnvPtr = lib::Nested::NestedMapPtr<std::string, TypeInfoPtr>;
 
-    class SemAnalyzer {
-    private:
-        bool in_func = false;
-        TYPE::Type decl_type = TYPE::Type::Dam, ret_type = TYPE::Type::Void;
-        EnvPtr symbol, alias;
-        ASTPtr &rootNode;
-    public:
-        explicit SemAnalyzer(ASTPtr &ast) : rootNode(ast) {
+  class SemAnalyzer {
+  private:
+    bool in_func = false;
+    TYPE::Type decl_type = TYPE::Type::Dam, ret_type = TYPE::Type::Void;
+    EnvPtr symbol, alias;
+    ASTPtr &rootNode;
+  public:
+    explicit SemAnalyzer(ASTPtr &ast) : rootNode(ast) {
 //            symbol = MakeNestedMap<std::string, TypeInfoPtr>();
 //            alias = MakeNestedMap<std::string, TypeInfoPtr>();
-        }
+    }
 
-        TypeInfoPtr SemAnalyze(IntAST *);
+    TypeInfoPtr SemAnalyze(IntAST *);
 
-        TypeInfoPtr SemAnalyze(CharAST *);
+    TypeInfoPtr SemAnalyze(CharAST *);
 
-        TypeInfoPtr SemAnalyze(StringAST *);
+    TypeInfoPtr SemAnalyze(StringAST *);
 
-        TypeInfoPtr SemAnalyze(VariableAST *);
+    TypeInfoPtr SemAnalyze(VariableAST *);
 
-        TypeInfoPtr SemAnalyze(VariableDeclAST *);
+    TypeInfoPtr SemAnalyze(VariableDecl *);
 
-        TypeInfoPtr SemAnalyze(VariableDefAST *);
+    TypeInfoPtr SemAnalyze(VariableDefAST *);
 
-        TypeInfoPtr SemAnalyze(BinaryAST *);
+    TypeInfoPtr SemAnalyze(BinaryStmt *);
 
-        TypeInfoPtr SemAnalyze(UnaryAST *);
+    TypeInfoPtr SemAnalyze(UnaryStmt *);
 
-        TypeInfoPtr SemAnalyze(ReturnAST *);
+    TypeInfoPtr SemAnalyze(ReturnStmt *);
 
-        TypeInfoPtr SemAnalyze(BlockAST *);
+    TypeInfoPtr SemAnalyze(BreakStmt *);
 
-        TypeInfoPtr SemAnalyze(IfElseAST *);
+    TypeInfoPtr SemAnalyze(ContinueStmt *);
 
-        TypeInfoPtr SemAnalyze(CallAST *);
+    TypeInfoPtr SemAnalyze(CompoundStmt *);
 
-        TypeInfoPtr SemAnalyze(ProtoTypeAST *);
+    TypeInfoPtr SemAnalyze(IfElseStmt *);
 
-        TypeInfoPtr SemAnalyze(FunctionDefAST *);
+    TypeInfoPtr SemAnalyze(CallStmt *);
 
-        TypeInfoPtr SemAnalyze(FuncParamAST *);
+    TypeInfoPtr SemAnalyze(ProtoTypeAST *);
 
-        TypeInfoPtr SemAnalyze(PrimTypeAST *);
+    TypeInfoPtr SemAnalyze(FunctionDefAST *);
 
-        TypeInfoPtr SemAnalyze(WhileAST *);
+    TypeInfoPtr SemAnalyze(FuncParamAST *);
 
-        void Analyze() { rootNode->SemAnalyze(this); }
+    TypeInfoPtr SemAnalyze(PrimTypeAST *);
 
-        Guard NewEnv();
+    TypeInfoPtr SemAnalyze(WhileStmt *);
 
-    };
+    void Analyze() { rootNode->SemAnalyze(this); }
 
-    // print error message
-    inline TypeInfoPtr LogError(const LoggerPtr &log, std::string &message, const std::string &id);
+    Guard NewEnv();
 
-    inline TypeInfoPtr LogError(const LoggerPtr &log, std::string &message);
+  };
+
+  // print error message
+  inline TypeInfoPtr LogError(const LoggerPtr &log, std::string &message, const std::string &id);
+
+  inline TypeInfoPtr LogError(const LoggerPtr &log, std::string &message);
 
 }
 
