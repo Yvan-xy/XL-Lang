@@ -152,8 +152,10 @@ namespace RJIT::mid::analyzer {
           (ret_type >= TYPE::Type::Int8 && ret_type <= TYPE::Type::UInt32)) {
         type = MakePrimType(ret_type, true);
       }
+    } else if (ret_type == prim_type) {
+      return type = MakePrimType(ret_type, true);
     }
-    info = "return value's type is defferent from prototype";
+    info = "return value's type is different from prototype";
     return LogError(node->Logger(), info);
   }
 

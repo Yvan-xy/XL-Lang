@@ -3,13 +3,13 @@
 ## EBNF of RJitLang
 
 ```ebnf
-comp_unit ::= [comp_unit](declation | function_definition)
+comp_unit ::= [comp_unit](declation | func_def)
 declation ::= var_decl
 var_decl ::= "var" var_def {',' var_def} ':' prime_type';'
 var_def ::= ident ['=' init_value]
 init_value ::= expr
 
-function_definition ::= "def" ident'('[func_params]')' [func_type] block
+func_def ::= "def" ident'('[func_params]')' [func_type] block
 func_type ::= 'void' | prime_type
 func_params ::= func_param {',' func_param}
 func_param ::= ident prime_type

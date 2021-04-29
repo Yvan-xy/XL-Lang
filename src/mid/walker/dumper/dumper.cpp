@@ -56,9 +56,11 @@ namespace RJIT::mid {
   }
 
   void Dumper::visit(ReturnStmt *node) {
-    os << "[ return ";
-    if (node->hasReturnVal())
+    os << "[ return";
+    if (node->hasReturnVal()) {
+      os << " ";
       node->getReturn()->Dump(this);
+    }
     os << " ]";
   }
 
