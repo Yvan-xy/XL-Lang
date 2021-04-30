@@ -1,8 +1,8 @@
 #ifndef RJIT_NESTEDMAP_H
 #define RJIT_NESTEDMAP_H
 
-#include <map>
 #include <memory>
+#include <unordered_map>
 
 namespace RJIT::lib {
 
@@ -16,7 +16,7 @@ namespace RJIT::lib {
     template<typename K, typename V>
     class NestedMap {
     private:
-      std::map<K, V> map_;
+      std::unordered_map<K, V> map_;
       NestedMapPtr<K, V> outer_;
 
     public:

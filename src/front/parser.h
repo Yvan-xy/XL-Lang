@@ -91,6 +91,10 @@ namespace RJIT::front {
 
     ASTPtr ParseIdentifier();
 
+    ASTPtr ParseFunctionCall();
+
+    ASTPtr ParseFunctionCall(const std::string &func_name);
+
     ASTPtr ParseVariableDefine();
 
     ASTPtr ParseReturn();

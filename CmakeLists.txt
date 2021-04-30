@@ -10,7 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(RJIT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(RJIT_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
-#add_compile_options(-Wall -Werror -O2)
+add_compile_options(-Wall -Werror)
 
 
 include_directories(${RJIT_INCLUDE_DIR})

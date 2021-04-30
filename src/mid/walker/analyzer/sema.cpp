@@ -1,5 +1,6 @@
 #include "sema.h"
 #include "lib/guard.h"
+#include "lib/debug.h"
 #include <utility>
 
 namespace RJIT::mid::analyzer {
@@ -180,11 +181,56 @@ namespace RJIT::mid::analyzer {
   }
 
   TypeInfoPtr SemAnalyzer::SemAnalyze(IfElseStmt *node) {
-    return nullptr;
+    return node->set_ast_type(MakeVoid());
   }
 
+  // TODO: check parameter type
   TypeInfoPtr SemAnalyzer::SemAnalyze(CallStmt *node) {
-    return nullptr;
+    std::string info;
+
+    // check return type here
+    auto callee = symbol->GetItem(node->getSymbol());
+    auto ret_typeinfo = callee->GetReturnType();
+
+    // check parameter reference here
+    TypePtrList real_args;
+    for (const auto &it : node->getArgs()) {
+      auto real_arg_type = it->SemAnalyze(this);
+      real_args.push_back(real_arg_type);
+    }
+
+    // type check
+    auto args = callee->GetArgsType();
+    if (args) {
+      if (!args->empty()) {
+        if (args->size() != real_args.size()) {
+          info = "function '" + node->getSymbol() + "' need " + std::to_string(args->size());
+          info += " parameters, but given " + std::to_string(real_args.size()) + " values.";
+          return LogError(node->Logger(), info, node->getSymbol());
+        }
+
+        auto args_types = args.value();
+        for (int i = 0; i < args_types.size(); i++) {
+          if (args_types[i]->GetTypeId() != real_args[i]->GetTypeId()) {
+            info = "function '" + node->getSymbol() + "(";
+            auto tail = --(args_types.end());
+            for (const auto &it : args_types) {
+              info += type2String(it->GetType());
+              if (it != *tail) info += ", ";
+            }
+            info += ")' parameter types are incompliant.";
+            return LogError(node->Logger(), info, node->getSymbol());
+          }
+        }
+      } else {
+        if (!node->getArgs().empty()) {
+          info = "function don't need parameters here";
+          return LogError(node->Logger(), info, node->getSymbol());
+        }
+      }
+    }
+
+    return node->set_ast_type(MakePrimType(ret_typeinfo->GetType(), ret_typeinfo->IsRightValue()));
   }
 
   TypeInfoPtr SemAnalyzer::SemAnalyze(ProtoTypeAST *node) {
@@ -211,6 +257,7 @@ namespace RJIT::mid::analyzer {
       return LogError(node->Logger(), info, node->getFuncName());
     }
     sym->AddItem(node->getFuncName(), type);
+
 
     return node->set_ast_type(type);
   }
@@ -249,6 +296,19 @@ namespace RJIT::mid::analyzer {
   }
 
   TypeInfoPtr SemAnalyzer::SemAnalyze(WhileStmt *node) {
+    return nullptr;
+  }
+
+  TypeInfoPtr SemAnalyzer::SemAnalyze(TranslationUnitDecl *node) {
+    auto guard = !in_func ? NewEnv() : Guard(nullptr);
+
+    std::string info = "occur error in global definition";
+    for (const auto &it : node->Decls()) {
+      auto type = it->SemAnalyze(this);
+      if (type == nullptr){}
+//        break;
+//        LogError(node->Logger(), info, "TranslationDeclUnit");
+    }
     return nullptr;
   }
 

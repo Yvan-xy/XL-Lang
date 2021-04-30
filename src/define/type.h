@@ -53,7 +53,7 @@ namespace RJIT::TYPE {
     virtual std::optional<TypePtrList> GetArgsType() const = 0;
 
     // return the return type of a function call
-    virtual TypeInfoPtr GetReturnType(const TypePtrList &args) const = 0;
+    virtual TypeInfoPtr GetReturnType() const = 0;
 
     // return the identifier of current type
     virtual std::string GetTypeId() const = 0;
@@ -97,7 +97,7 @@ namespace RJIT::TYPE {
 
     std::optional<TypePtrList> GetArgsType() const override { return {}; }
 
-    TypeInfoPtr GetReturnType(const TypePtrList &args) const override {
+    TypeInfoPtr GetReturnType() const override {
       return nullptr;
     }
 
@@ -128,7 +128,7 @@ namespace RJIT::TYPE {
 
     std::optional<TypePtrList> GetArgsType() const override { return {}; }
 
-    TypeInfoPtr GetReturnType(const TypePtrList &args) const override {
+    TypeInfoPtr GetReturnType() const override {
       return nullptr;
     }
 
@@ -163,7 +163,7 @@ namespace RJIT::TYPE {
 
     std::optional<TypePtrList> GetArgsType() const override { return args_; }
 
-    TypeInfoPtr GetReturnType(const TypePtrList &args) const override;
+    TypeInfoPtr GetReturnType() const override;
 
     std::string GetTypeId() const override;
 

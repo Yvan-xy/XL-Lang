@@ -53,6 +53,8 @@ namespace RJIT::front {
 
     bool isIdentifier() const { return type == TokenType::Identifier; }
 
+    bool isFunctionName() const { return type == TokenType::Identifier; }
+
     bool isOper() const { return type == TokenType::Operator; }
 
     bool isKeyword() const { return type == TokenType::Keyword; }

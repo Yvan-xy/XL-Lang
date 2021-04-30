@@ -216,7 +216,7 @@ namespace RJIT::TYPE {
     return std::make_shared<FuncType>(args_, ret_, is_right);
   }
 
-  TypeInfoPtr FuncType::GetReturnType(const TypePtrList &args) const {
+  TypeInfoPtr FuncType::GetReturnType() const {
     return ret_;
   }
 

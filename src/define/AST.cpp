@@ -86,6 +86,10 @@ namespace RJIT::AST {
     dumper->visit(this);
   }
 
+  void TranslationUnitDecl::Dump(mid::Dumper *dumper) {
+    dumper->visit(this);
+  }
+
   TypeInfoPtr IntAST::SemAnalyze(SemAnalyzer *analyzer) {
     return analyzer->SemAnalyze(this);
   }
@@ -151,6 +155,10 @@ namespace RJIT::AST {
   }
 
   TypeInfoPtr FuncParamAST::SemAnalyze(SemAnalyzer *analyzer) {
+    return analyzer->SemAnalyze(this);
+  }
+
+  TypeInfoPtr TranslationUnitDecl::SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) {
     return analyzer->SemAnalyze(this);
   }
 

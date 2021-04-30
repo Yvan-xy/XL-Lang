@@ -20,7 +20,7 @@ namespace RJIT::mid {
   }
 
   void Dumper::visit(VariableAST *node) {
-    os << "[ \"" << node->getName() << "\" : " << "Variable ]";
+    os << "[ \"" << node->getName() << "\" : " << node->getTypeStr() <<" ]";
   }
 
   void Dumper::visit(VariableDecl *node) {
@@ -137,5 +137,12 @@ namespace RJIT::mid {
     os << " ) ";
     node->getBlock()->Dump(this);
     os << "\n";
+  }
+
+  void Dumper::visit(TranslationUnitDecl *node) {
+    for (const auto &it : node->Decls()) {
+      it->Dump(this);
+      os << "\n" << endl;
+    }
   }
 }

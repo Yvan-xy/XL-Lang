@@ -73,7 +73,7 @@ namespace RJIT::AST {
 
     front::LoggerPtr &Logger() { return logger; }
 
-    virtual std::string getTypeStr() { return ""; }
+    virtual std::string getTypeStr() { return type2String(ast_type->GetType()); }
 
     virtual void Dump(mid::Dumper *) = 0;
 
@@ -81,19 +81,30 @@ namespace RJIT::AST {
   };
 
   class Stmt : public BaseAST {
-  private:
   };
 
   class Decl : public BaseAST {
-
-  };
-
-  class TranslationUnitDecl : public Decl {
-
   };
 
   typedef std::unique_ptr<BaseAST> ASTPtr;
   typedef std::vector<ASTPtr> ASTPtrList;
+  typedef std::unique_ptr<Decl> DeclPtr;
+  typedef std::unique_ptr<Stmt> StmtPtr;
+
+  class TranslationUnitDecl : public Decl {
+  private:
+    ASTPtrList decls;
+
+  public:
+    explicit TranslationUnitDecl(ASTPtrList _decls) : decls(std::move(_decls)) {}
+
+    ASTPtrList &Decls() { return decls; }
+
+    void Dump(mid::Dumper *) override;
+
+    TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+  };
+
 
   class IntAST : public BaseAST {
   private:
@@ -408,8 +419,8 @@ namespace RJIT::AST {
     std::string identifier;
 
   public:
-    FuncParamAST(ASTPtr type_, std::string id) : type(std::move(type_)), identifier(std::move(id)) {
-    }
+    FuncParamAST(ASTPtr type_, std::string id)
+        : type(std::move(type_)), identifier(std::move(id)) {}
 
     std::string getTypeStr() override { return type->getTypeStr(); }
 

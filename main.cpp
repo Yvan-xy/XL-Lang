@@ -14,11 +14,12 @@ int main(int argc, char *argv[]) {
   Lexer lexer("a.c");
   Parser parser(&lexer);
   parser.Parse();
-  parser.DumpAST();
 
   SemAnalyzer semAnalyzer(parser.ast());
   semAnalyzer.Analyze();
 
+  parser.DumpAST();
+//
 //    RJIT::lib::Nested::NestedMapPtr<int, int *> ptr = MakeNestedMap<int, int *>();
 //    for (int i = 1; i < 10; i++) {
 //    int *value = new int(3*i);

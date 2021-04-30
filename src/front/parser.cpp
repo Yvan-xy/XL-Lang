@@ -395,28 +395,22 @@ namespace RJIT::front {
         auto intVal = MakeAST<IntAST>(logger(), 1);
 
         nextToken(); // eat '++'
-        if (!isSemicolon()) {
-          LogError("Expect a ';' here.");
-        }
-        nextToken();// eat ;
 
         return MakeAST<BinaryStmt>(std::move(log), Operator::Add, std::move(varAST), std::move(intVal));
       } else if (isDecrement()) {
         auto intVal = MakeAST<IntAST>(logger(), 1);
 
         nextToken(); // eat '--'
+
+        return MakeAST<BinaryStmt>(std::move(log), Operator::Sub, std::move(varAST), std::move(intVal));
+      } else if (isEqualSign()) {
+        ASTPtr assignAST = ParseBinaryOPRHS(0, std::move(varAST));
+
         if (!isSemicolon()) {
           LogError("Expect a ';' here.");
         }
         nextToken();// eat ;
 
-        return MakeAST<BinaryStmt>(std::move(log), Operator::Sub, std::move(varAST), std::move(intVal));
-      } else if (isEqualSign()) {
-        ASTPtr assignAST = ParseBinaryOPRHS(0, std::move(varAST));
-        if (!isSemicolon()) {
-          LogError("Expect a ';' here.");
-        }
-        nextToken();// eat ;
         return assignAST;
       } else {
         DBG_WARN(1, "unknown operator here");
@@ -424,6 +418,18 @@ namespace RJIT::front {
     }
 
     /* Parse function call */
+    return ParseFunctionCall(identName);
+  }
+
+  ASTPtr Parser::ParseFunctionCall() {
+    assert(curToken.isIdentifier());
+    std::string identName = curToken.getIdentifierValue();
+    nextToken();
+
+    return ParseFunctionCall(identName);
+  }
+
+  ASTPtr Parser::ParseFunctionCall(const std::string &func_name) {
     assert(isLeftParentheses());
     nextToken();// eat '('
 
@@ -448,13 +454,8 @@ namespace RJIT::front {
     }
     nextToken();// eat ')'
 
-    if (!isSemicolon()) {
-      LogError("Expect a ';' in function call.");
-    }
-    nextToken();// eat ';'
-
     auto log = logger();
-    return MakeAST<CallStmt>(std::move(log), identName, std::move(args));
+    return MakeAST<CallStmt>(std::move(log), func_name, std::move(args));
   }
 
   ASTPtr Parser::ParseFunctionDef() {
@@ -653,7 +654,7 @@ namespace RJIT::front {
     }
 
     auto log = logger();
-    rootNode = MakeAST<CompoundStmt>(std::move(log), std::move(defs));
+    rootNode = MakeAST<TranslationUnitDecl>(std::move(log), std::move(defs));
   }
 
 }// namespace RJIT::front

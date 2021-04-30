@@ -62,6 +62,8 @@ namespace RJIT::mid {
         void visit(PrimTypeAST *) override;
 
         void visit(WhileStmt *) override;
+
+        void visit(TranslationUnitDecl *) override;
     };
 }
 

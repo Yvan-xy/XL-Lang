@@ -49,6 +49,7 @@ namespace RJIT::mid {
 
     virtual void visit(PrimTypeAST *) {};
 
+    virtual void visit(TranslationUnitDecl *) {}
   };
 }
 

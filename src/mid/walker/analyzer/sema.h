@@ -64,6 +64,8 @@ namespace RJIT::mid::analyzer {
 
     TypeInfoPtr SemAnalyze(WhileStmt *);
 
+    TypeInfoPtr SemAnalyze(TranslationUnitDecl *);
+
     void Analyze() { rootNode->SemAnalyze(this); }
 
     Guard NewEnv();
