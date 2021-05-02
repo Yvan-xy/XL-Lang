@@ -91,75 +91,75 @@ namespace RJIT::AST {
   }
 
   TypeInfoPtr IntAST::SemAnalyze(SemAnalyzer *analyzer) {
-    return analyzer->SemAnalyze(this);
+    return analyzer->visit(this);
   }
 
   TypeInfoPtr CharAST::SemAnalyze(SemAnalyzer *analyzer) {
-    return analyzer->SemAnalyze(this);
+    return analyzer->visit(this);
   }
 
   TypeInfoPtr StringAST::SemAnalyze(SemAnalyzer *analyzer) {
-    return analyzer->SemAnalyze(this);
+    return analyzer->visit(this);
   }
 
   TypeInfoPtr VariableAST::SemAnalyze(SemAnalyzer *analyzer) {
-    return analyzer->SemAnalyze(this);
+    return analyzer->visit(this);
   }
 
   TypeInfoPtr VariableDecl::SemAnalyze(SemAnalyzer *analyzer) {
-    return analyzer->SemAnalyze(this);
+    return analyzer->visit(this);
   }
 
   TypeInfoPtr VariableDefAST::SemAnalyze(SemAnalyzer *analyzer) {
-    return analyzer->SemAnalyze(this);
+    return analyzer->visit(this);
   }
 
   TypeInfoPtr BinaryStmt::SemAnalyze(SemAnalyzer *analyzer) {
-    return analyzer->SemAnalyze(this);
+    return analyzer->visit(this);
   }
 
   TypeInfoPtr UnaryStmt::SemAnalyze(SemAnalyzer *analyzer) {
-    return analyzer->SemAnalyze(this);
+    return analyzer->visit(this);
   }
 
   TypeInfoPtr ReturnStmt::SemAnalyze(SemAnalyzer *analyzer) {
-    return analyzer->SemAnalyze(this);
+    return analyzer->visit(this);
   }
 
   TypeInfoPtr CompoundStmt::SemAnalyze(SemAnalyzer *analyzer) {
-    return analyzer->SemAnalyze(this);
+    return analyzer->visit(this);
   }
 
   TypeInfoPtr IfElseStmt::SemAnalyze(SemAnalyzer *analyzer) {
-    return analyzer->SemAnalyze(this);
+    return analyzer->visit(this);
   }
 
   TypeInfoPtr WhileStmt::SemAnalyze(SemAnalyzer *analyzer) {
-    return analyzer->SemAnalyze(this);
+    return analyzer->visit(this);
   }
 
   TypeInfoPtr CallStmt::SemAnalyze(SemAnalyzer *analyzer) {
-    return analyzer->SemAnalyze(this);
+    return analyzer->visit(this);
   }
 
   TypeInfoPtr ProtoTypeAST::SemAnalyze(SemAnalyzer *analyzer) {
-    return analyzer->SemAnalyze(this);
+    return analyzer->visit(this);
   }
 
   TypeInfoPtr FunctionDefAST::SemAnalyze(SemAnalyzer *analyzer) {
-    return analyzer->SemAnalyze(this);
+    return analyzer->visit(this);
   }
 
   TypeInfoPtr PrimTypeAST::SemAnalyze(SemAnalyzer *analyzer) {
-    return analyzer->SemAnalyze(this);
+    return analyzer->visit(this);
   }
 
   TypeInfoPtr FuncParamAST::SemAnalyze(SemAnalyzer *analyzer) {
-    return analyzer->SemAnalyze(this);
+    return analyzer->visit(this);
   }
 
   TypeInfoPtr TranslationUnitDecl::SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) {
-    return analyzer->SemAnalyze(this);
+    return analyzer->visit(this);
   }
 
 }

@@ -6,36 +6,36 @@
 namespace RJIT::mid::analyzer {
 
   Guard SemAnalyzer::NewEnv() {
-    symbol = MakeNestedMap(symbol);
-    alias = MakeNestedMap(alias);
+    _symbol = MakeNestedMap(_symbol);
+    _alias = MakeNestedMap(_alias);
     return Guard([this] {
-      symbol = symbol->outer();
-      alias = alias->outer();
+      _symbol = _symbol->outer();
+      _alias = _alias->outer();
     });
   }
 
-  TypeInfoPtr SemAnalyzer::SemAnalyze(IntAST *node) {
+  TypeInfoPtr SemAnalyzer::visit(IntAST *node) {
     // make right value 'int32' type
     return node->set_ast_type(MakePrimType(Type::Int32, true));
   }
 
-  TypeInfoPtr SemAnalyzer::SemAnalyze(CharAST *node) {
+  TypeInfoPtr SemAnalyzer::visit(CharAST *node) {
     // make right value 'uint8' type as a char
     return node->set_ast_type(MakePrimType(Type::UInt8, true));
   }
 
-  TypeInfoPtr SemAnalyzer::SemAnalyze(StringAST *node) {
+  TypeInfoPtr SemAnalyzer::visit(StringAST *node) {
     return node->set_ast_type(MakePrimType(Type::String, true));
   }
 
-  TypeInfoPtr SemAnalyzer::SemAnalyze(VariableAST *node) {
-    auto type_ = symbol->GetItem(node->getName());
+  TypeInfoPtr SemAnalyzer::visit(VariableAST *node) {
+    auto type_ = _symbol->GetItem(node->getName());
     std::string info = "undefined symbol";
     if (!type_) return LogError(node->Logger(), info, node->getName());
     return node->set_ast_type(type_);
   }
 
-  TypeInfoPtr SemAnalyzer::SemAnalyze(VariableDecl *node) {
+  TypeInfoPtr SemAnalyzer::visit(VariableDecl *node) {
     auto type = node->getType()->SemAnalyze(this);
     std::string info = "variable can not be void type";
     if (!type) return nullptr;
@@ -46,7 +46,7 @@ namespace RJIT::mid::analyzer {
     }
 
     // check variable defines
-    this->decl_type = node->getPrimeType();
+    this->_decl_type = node->getPrimeType();
     for (const auto &i : node->getDefs()) {
       if (!i->SemAnalyze(this)) return nullptr;
     }
@@ -54,11 +54,11 @@ namespace RJIT::mid::analyzer {
     return node->set_ast_type(MakeVoid());
   }
 
-  TypeInfoPtr SemAnalyzer::SemAnalyze(VariableDefAST *node) {
+  TypeInfoPtr SemAnalyzer::visit(VariableDefAST *node) {
     std::string info;
 
     // check if redeclared
-    if (symbol->GetItem(node->getIdentifier(), false)) {
+    if (_symbol->GetItem(node->getIdentifier(), false)) {
       info = "variable has been defined";
       return LogError(node->Logger(), info, node->getIdentifier());
     }
@@ -70,21 +70,21 @@ namespace RJIT::mid::analyzer {
       auto type = node->getInitValue()->SemAnalyze(this);
       if (!type) return nullptr;
 
-      if (decl_type != type->GetType()) {
-        info = "init value type should be " + TYPE::type2String(decl_type);
+      if (_decl_type != type->GetType()) {
+        info = "init value type should be " + TYPE::type2String(_decl_type);
         return LogError(node->Logger(), info, node->getIdentifier());
       }
     }
-    node->setType(decl_type);
+    node->setType(_decl_type);
 
     // Add to environment
-    var_type = MakePrimType(decl_type, false);
-    symbol->AddItem(node->getIdentifier(), var_type);
+    var_type = MakePrimType(_decl_type, false);
+    _symbol->AddItem(node->getIdentifier(), var_type);
 
     return node->set_ast_type(MakeVoid());
   }
 
-  TypeInfoPtr SemAnalyzer::SemAnalyze(BinaryStmt *node) {
+  TypeInfoPtr SemAnalyzer::visit(BinaryStmt *node) {
     auto lhs = node->getLHS()->SemAnalyze(this);
     auto rhs = node->getRHS()->SemAnalyze(this);
     if (!lhs || !rhs) return nullptr;
@@ -128,7 +128,7 @@ namespace RJIT::mid::analyzer {
     return node->set_ast_type(type);
   }
 
-  TypeInfoPtr SemAnalyzer::SemAnalyze(UnaryStmt *node) {
+  TypeInfoPtr SemAnalyzer::visit(UnaryStmt *node) {
     std::string info;
     auto operand_type = node->Operand()->SemAnalyze(this);
     if (!operand_type->IsInteger() && !operand_type->IsBool()) {
@@ -144,7 +144,7 @@ namespace RJIT::mid::analyzer {
     return node->set_ast_type(operand_type);
   }
 
-  TypeInfoPtr SemAnalyzer::SemAnalyze(ReturnStmt *node) {
+  TypeInfoPtr SemAnalyzer::visit(ReturnStmt *node) {
     std::string info;
     TypeInfoPtr type;
     if (node->hasReturnVal()) {
@@ -154,36 +154,36 @@ namespace RJIT::mid::analyzer {
     }
     if (!type) return nullptr;
 
-    if (ret_type == TYPE::Type::Void && !type->IsVoid()) {
+    if (_ret_type == TYPE::Type::Void && !type->IsVoid()) {
       info = "function should not have return value";
       return LogError(node->Logger(), info);
     }
 
     auto prim_type = type->GetType();
-    if (ret_type != prim_type) {
+    if (_ret_type != prim_type) {
       if (type->IsInteger() &&
-          (ret_type >= TYPE::Type::Int8 && ret_type <= TYPE::Type::UInt32)) {
-        type = MakePrimType(ret_type, true);
+          (_ret_type >= TYPE::Type::Int8 && _ret_type <= TYPE::Type::UInt32)) {
+        type = MakePrimType(_ret_type, true);
       }
-    } else if (ret_type == prim_type) {
-      return type = MakePrimType(ret_type, true);
+    } else if (_ret_type == prim_type) {
+      return type = MakePrimType(_ret_type, true);
     }
     info = "return value's type is different from prototype";
     return LogError(node->Logger(), info);
   }
 
-  TypeInfoPtr SemAnalyzer::SemAnalyze(BreakStmt *node) {
+  TypeInfoPtr SemAnalyzer::visit(BreakStmt *node) {
     return nullptr;
   }
 
-  TypeInfoPtr SemAnalyzer::SemAnalyze(ContinueStmt *node) {
+  TypeInfoPtr SemAnalyzer::visit(ContinueStmt *node) {
     return nullptr;
   }
 
-  TypeInfoPtr SemAnalyzer::SemAnalyze(CompoundStmt *node) {
+  TypeInfoPtr SemAnalyzer::visit(CompoundStmt *node) {
     // make new environment when not in function
-    auto guard = !in_func ? NewEnv() : Guard(nullptr);
-    if (in_func) in_func = false;
+    auto guard = !_in_func ? NewEnv() : Guard(nullptr);
+    if (_in_func) _in_func = false;
 
     for (auto &i : node->getStmts()) {
       auto type = i->SemAnalyze(this);
@@ -192,16 +192,16 @@ namespace RJIT::mid::analyzer {
     return node->set_ast_type(MakeVoid());
   }
 
-  TypeInfoPtr SemAnalyzer::SemAnalyze(IfElseStmt *node) {
+  TypeInfoPtr SemAnalyzer::visit(IfElseStmt *node) {
     return node->set_ast_type(MakeVoid());
   }
 
   // TODO: check parameter type
-  TypeInfoPtr SemAnalyzer::SemAnalyze(CallStmt *node) {
+  TypeInfoPtr SemAnalyzer::visit(CallStmt *node) {
     std::string info;
 
     // check return type here
-    auto callee = symbol->GetItem(node->getSymbol());
+    auto callee = _symbol->GetItem(node->getSymbol());
     if (callee == nullptr) {
       info = "function '" + node->getSymbol() + "' undefined";
       return LogError(node->Logger(), info);
@@ -249,11 +249,11 @@ namespace RJIT::mid::analyzer {
     return node->set_ast_type(MakePrimType(ret_typeinfo->GetType(), ret_typeinfo->IsRightValue()));
   }
 
-  TypeInfoPtr SemAnalyzer::SemAnalyze(ProtoTypeAST *node) {
+  TypeInfoPtr SemAnalyzer::visit(ProtoTypeAST *node) {
     std::string info;
     Type ret = node->getReturnType();
     if (ret == TYPE::Type::Dam) return nullptr;
-    if (in_func) this->ret_type = ret;
+    if (_in_func) this->_ret_type = ret;
 
     TypePtrList params;
     for (auto &i : node->getArgs()) {
@@ -267,7 +267,7 @@ namespace RJIT::mid::analyzer {
     std::shared_ptr<FuncType> type =
         std::make_shared<FuncType>(std::move(params), std::move(retType), true);
 
-    const auto &sym = in_func ? symbol->outer() : symbol;
+    const auto &sym = _in_func ? _symbol->outer() : _symbol;
     if (sym->GetItem(node->getFuncName(), false)) {
       info = "symbol has already been defined";
       return LogError(node->Logger(), info, node->getFuncName());
@@ -278,10 +278,10 @@ namespace RJIT::mid::analyzer {
     return node->set_ast_type(type);
   }
 
-  TypeInfoPtr SemAnalyzer::SemAnalyze(FunctionDefAST *node) {
+  TypeInfoPtr SemAnalyzer::visit(FunctionDefAST *node) {
     auto guard = NewEnv();
     // set flag, this flag will be cleared when entering body
-    in_func = true;
+    _in_func = true;
 
     auto protoType = node->getProtoType()->SemAnalyze(this);
     auto body = node->getBody()->SemAnalyze(this);
@@ -289,34 +289,34 @@ namespace RJIT::mid::analyzer {
     return node->set_ast_type(MakeVoid());
   }
 
-  TypeInfoPtr SemAnalyzer::SemAnalyze(FuncParamAST *node) {
+  TypeInfoPtr SemAnalyzer::visit(FuncParamAST *node) {
     std::string info;
     auto type = node->getType()->SemAnalyze(this);
     if (!type) return nullptr;
 
-    if (in_func) {
+    if (_in_func) {
       // check if is conflicted
-      if (symbol->GetItem(node->getIdentifier(), false)) {
+      if (_symbol->GetItem(node->getIdentifier(), false)) {
         info = "argument has already been declared";
         return LogError(node->Logger(), info, node->getIdentifier());
       }
-      symbol->AddItem(node->getIdentifier(), type);
+      _symbol->AddItem(node->getIdentifier(), type);
     }
 
     type = MakePrimType(type->GetType(), true);
     return node->set_ast_type(type);
   }
 
-  TypeInfoPtr SemAnalyzer::SemAnalyze(PrimTypeAST *node) {
+  TypeInfoPtr SemAnalyzer::visit(PrimTypeAST *node) {
     return node->set_ast_type(MakePrimType(node->getType(), false));
   }
 
-  TypeInfoPtr SemAnalyzer::SemAnalyze(WhileStmt *node) {
+  TypeInfoPtr SemAnalyzer::visit(WhileStmt *node) {
     return nullptr;
   }
 
-  TypeInfoPtr SemAnalyzer::SemAnalyze(TranslationUnitDecl *node) {
-    auto guard = !in_func ? NewEnv() : Guard(nullptr);
+  TypeInfoPtr SemAnalyzer::visit(TranslationUnitDecl *node) {
+    auto guard = !_in_func ? NewEnv() : Guard(nullptr);
 
     std::string info = "occur error in global definition";
     for (const auto &it : node->Decls()) {

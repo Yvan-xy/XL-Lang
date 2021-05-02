@@ -203,7 +203,26 @@ public:
   static BinaryPtr createNot(const SSAPtr &Op, const BlockPtr &InsertAtEnd);
 };
 
+// function definition
+// operands: basic blocks
+class Function : public User {
+private:
+  std::vector<SSAPtr> _args;
+  std::string         _function_name;
 
+public:
+  Function(const std::string &name) : _function_name(name) {}
+
+  // setters
+  void set_arg(std::size_t i, const SSAPtr &arg) {
+    _args.resize(i + 1);
+    _args[i] = arg;
+  }
+
+  // getters
+  const std::string &GetFunctionName() const { return _function_name; }
+  const std::vector<SSAPtr> &args() { return _args; }
+};
 
 
 

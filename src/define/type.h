@@ -185,6 +185,10 @@ public:
   TypeInfoPtr GetValueType(bool is_right) const override;
 
   Type GetType() override { return type->GetType(); }
+
+  bool operator==(const TypeInfoPtr &typeInfo) override {
+    return type->GetType() == typeInfo->GetType();
+  }
 };
 
 class FuncType : public TypeInfo {
@@ -223,6 +227,7 @@ public:
 
   std::size_t GetSize() const override { return 4; }
 
+  bool operator==(const TypeInfoPtr &typeInfo) override;
 };
 
 // create a new primitive type

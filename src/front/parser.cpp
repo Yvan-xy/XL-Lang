@@ -637,7 +637,6 @@ namespace RJIT::front {
     } else {
       return ParseExpression();
     }
-    return nullptr;
   }
 
   ASTPtr Parser::ParseTop() {

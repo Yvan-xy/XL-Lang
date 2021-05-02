@@ -234,5 +234,27 @@ TypeInfoPtr FuncType::GetValueType(bool is_right) const {
 TypeInfoPtr FuncType::GetReturnType() const {
   return ret_;
 }
+bool FuncType::operator==(const TypeInfoPtr &typeInfo) {
+  DBG_ASSERT(typeInfo->IsFunction(), "compare with non-function type");
+
+  // compare return type
+  auto ret = typeInfo->GetReturnType();
+
+  if (ret_ != ret) return false;
+
+  // compare parameters
+  auto args = typeInfo->GetArgsType().value();
+
+  // check size first
+  if (args_.size() != args.size()) {
+    return false;
+  }
+
+  for (std::size_t i = 0; i < args.size(); i++) {
+    if (args[i] != args_[i]) return false;
+  }
+  return true;
+}
+
 
 }

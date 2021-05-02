@@ -12,70 +12,52 @@ using namespace RJIT::TYPE;
 using namespace RJIT::front;
 
 namespace RJIT::mid::analyzer {
-  using EnvPtr = lib::Nested::NestedMapPtr<std::string, TypeInfoPtr>;
 
-  class SemAnalyzer {
-  private:
-    bool in_func = false;
-    TYPE::Type decl_type = TYPE::Type::Dam, ret_type = TYPE::Type::Void;
-    EnvPtr symbol, alias;
-    ASTPtr &rootNode;
-  public:
-    explicit SemAnalyzer(ASTPtr &ast) : rootNode(ast) {
-//            symbol = MakeNestedMap<std::string, TypeInfoPtr>();
-//            alias = MakeNestedMap<std::string, TypeInfoPtr>();
-    }
+using EnvPtr = lib::Nested::NestedMapPtr<std::string, TypeInfoPtr>;
 
-    TypeInfoPtr SemAnalyze(IntAST *);
+class SemAnalyzer : Visitor<TypeInfoPtr> {
+private:
+  EnvPtr     _alias;
+  EnvPtr     _symbol;
+  ASTPtr    &_rootNode;
+  bool       _in_func = false;
+  TYPE::Type _decl_type = TYPE::Type::Dam;
+  TYPE::Type _ret_type = TYPE::Type::Void;
 
-    TypeInfoPtr SemAnalyze(CharAST *);
+public:
+  explicit SemAnalyzer(ASTPtr &ast) : _rootNode(ast) {}
 
-    TypeInfoPtr SemAnalyze(StringAST *);
+  TypeInfoPtr visit(IntAST              *) override;
+  TypeInfoPtr visit(CharAST             *) override;
+  TypeInfoPtr visit(StringAST           *) override;
+  TypeInfoPtr visit(VariableAST         *) override;
+  TypeInfoPtr visit(VariableDecl        *) override;
+  TypeInfoPtr visit(VariableDefAST      *) override;
+  TypeInfoPtr visit(BinaryStmt          *) override;
+  TypeInfoPtr visit(UnaryStmt           *) override;
+  TypeInfoPtr visit(ReturnStmt          *) override;
+  TypeInfoPtr visit(BreakStmt           *) override;
+  TypeInfoPtr visit(ContinueStmt        *) override;
+  TypeInfoPtr visit(CompoundStmt        *) override;
+  TypeInfoPtr visit(IfElseStmt          *) override;
+  TypeInfoPtr visit(CallStmt            *) override;
+  TypeInfoPtr visit(ProtoTypeAST        *) override;
+  TypeInfoPtr visit(FunctionDefAST      *) override;
+  TypeInfoPtr visit(FuncParamAST        *) override;
+  TypeInfoPtr visit(PrimTypeAST         *) override;
+  TypeInfoPtr visit(WhileStmt           *) override;
+  TypeInfoPtr visit(TranslationUnitDecl *) override;
 
-    TypeInfoPtr SemAnalyze(VariableAST *);
+  void Analyze() { _rootNode->SemAnalyze(this); }
 
-    TypeInfoPtr SemAnalyze(VariableDecl *);
+  Guard NewEnv();
 
-    TypeInfoPtr SemAnalyze(VariableDefAST *);
+};
 
-    TypeInfoPtr SemAnalyze(BinaryStmt *);
+// print error message
+inline TypeInfoPtr LogError(const LoggerPtr &log, std::string &message, const std::string &id);
 
-    TypeInfoPtr SemAnalyze(UnaryStmt *);
-
-    TypeInfoPtr SemAnalyze(ReturnStmt *);
-
-    TypeInfoPtr SemAnalyze(BreakStmt *);
-
-    TypeInfoPtr SemAnalyze(ContinueStmt *);
-
-    TypeInfoPtr SemAnalyze(CompoundStmt *);
-
-    TypeInfoPtr SemAnalyze(IfElseStmt *);
-
-    TypeInfoPtr SemAnalyze(CallStmt *);
-
-    TypeInfoPtr SemAnalyze(ProtoTypeAST *);
-
-    TypeInfoPtr SemAnalyze(FunctionDefAST *);
-
-    TypeInfoPtr SemAnalyze(FuncParamAST *);
-
-    TypeInfoPtr SemAnalyze(PrimTypeAST *);
-
-    TypeInfoPtr SemAnalyze(WhileStmt *);
-
-    TypeInfoPtr SemAnalyze(TranslationUnitDecl *);
-
-    void Analyze() { rootNode->SemAnalyze(this); }
-
-    Guard NewEnv();
-
-  };
-
-  // print error message
-  inline TypeInfoPtr LogError(const LoggerPtr &log, std::string &message, const std::string &id);
-
-  inline TypeInfoPtr LogError(const LoggerPtr &log, std::string &message);
+inline TypeInfoPtr LogError(const LoggerPtr &log, std::string &message);
 
 }
 

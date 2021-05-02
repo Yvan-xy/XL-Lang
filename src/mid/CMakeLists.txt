@@ -6,6 +6,7 @@ add_library(mid
         visitor/visitor.cpp
         walker/dumper/dumper.cpp
         walker/analyzer/sema.cpp
+        walker/irbuilder/irbuilder.cpp
         )
 
 target_compile_features(mid PUBLIC cxx_std_17)

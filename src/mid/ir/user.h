@@ -14,6 +14,7 @@ private:
   Operands          _operands;
 
 public:
+  User() : _operands_num(0) {}
   explicit User(unsigned operands_num) : _operands_num(operands_num) {}
   User(unsigned operands_num, Operands operands)
     : _operands_num(operands_num), _operands(std::move(operands)) {
