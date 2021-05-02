@@ -7,7 +7,28 @@
 
 namespace RJIT::mid {
 
-class Instruction;
+class BasicBlock : public User {
+private:
+  SSAPtrList    _insts;
+  std::string   _name;    // block name
+  UserPtr       _parent;  // block's parent(function)
+
+public:
+  BasicBlock(UserPtr parent, std::string name)
+      : _name(std::move(name)), _parent(std::move(parent)) {}
+
+  void set_parent(const UserPtr &parent) { _parent = parent; }
+
+  void AddInstToEnd(const SSAPtr &inst) { _insts.emplace_back(inst); }
+
+  void AddInstBefore(const SSAPtr &insertBefore, const SSAPtr &inst);
+
+  //getters
+  SSAPtrList &insts() { return _insts; }
+  const UserPtr &parent() const { return _parent; }
+  auto inst_begin() const { return _insts.begin(); }
+  auto inst_end()   const { return _insts.end();   }
+};
 
 class Instruction : public User {
 private:
@@ -211,7 +232,7 @@ private:
   std::string         _function_name;
 
 public:
-  Function(const std::string &name) : _function_name(name) {}
+  explicit Function(std::string name) : _function_name(std::move(name)) {}
 
   // setters
   void set_arg(std::size_t i, const SSAPtr &arg) {
@@ -224,28 +245,15 @@ public:
   const std::vector<SSAPtr> &args() { return _args; }
 };
 
-
-
-class BasicBlock : public Value {
-private:
-  SSAPtrList    _insts;
-  std::string   _name;    // block name
-  UserPtr       _parent;  // block's parent(function)
-  BlockPtr      _prev, _next;
+class JumpInst : public User {
 public:
-  BasicBlock(UserPtr parent, std::string name)
-      : _name(std::move(name)), _parent(std::move(parent)) {}
+  explicit JumpInst(const SSAPtr &target) {
+    AddValue(target);
+  }
 
-  void set_parent(const UserPtr &parent) { _parent = parent; }
-
-  void AddInstToEnd(const SSAPtr &inst) { _insts.emplace_back(inst); }
-
-  void AddInstBefore(const SSAPtr &insertBefore, const SSAPtr &inst);
-
-  SSAPtrList &insts() { return _insts; }
-  auto begin() const { return _insts.begin(); }
-  const UserPtr &parent() const { return _parent; }
+  const SSAPtr &target() const { return (*this)[0].get(); }
 };
+
 
 }
 

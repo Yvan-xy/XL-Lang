@@ -75,8 +75,8 @@ namespace RJIT::mid {
   void Dumper::visit(CompoundStmt *node) {
     os << "[\n";
     incDepth();
-    auto end = --(node->getStmts().end());
-    for (const auto &i : node->getStmts()) {
+    auto end = --(node->stmts().end());
+    for (const auto &i : node->stmts()) {
       os << getPadding();
       i->Dump(this);
       if (i != *end) os << "\n";

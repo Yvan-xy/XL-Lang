@@ -6,8 +6,10 @@
 #include "front/lexer.h"
 #include "front/parser.h"
 #include "mid/walker/analyzer/sema.h"
+#include "mid/walker/irbuilder/irbuilder.h"
 
 using namespace RJIT::front;
+using namespace RJIT::mid;
 using namespace RJIT::mid::analyzer;
 
 int main(int argc, char *argv[]) {
@@ -19,6 +21,11 @@ int main(int argc, char *argv[]) {
   semAnalyzer.Analyze();
 
   parser.DumpAST();
+
+  IRBuilder irBuilder(parser.ast());
+
+  irBuilder.EmitIR();
+
 //
 //    RJIT::lib::Nested::NestedMapPtr<int, int *> ptr = MakeNestedMap<int, int *>();
 //    for (int i = 1; i < 10; i++) {

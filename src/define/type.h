@@ -239,6 +239,12 @@ inline TypeInfoPtr MakePrimType(Type type, bool is_right) {
 inline TypeInfoPtr MakeVoid() {
   return std::make_shared<PrimType>(Type::Void, true);
 }
+
+inline TypeInfoPtr
+MakeFuncType(TypePtrList args, TypeInfoPtr ret, bool is_right) {
+  return std::make_shared<FuncType>(args, ret, is_right);
+}
+
 }
 
 #endif //RJIT_TYPE_H

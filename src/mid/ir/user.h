@@ -10,14 +10,14 @@ namespace RJIT::mid {
 
 class User : public Value {
 private:
-  unsigned int      _operands_num;
   Operands          _operands;
+  unsigned int      _operands_num;
 
 public:
   User() : _operands_num(0) {}
   explicit User(unsigned operands_num) : _operands_num(operands_num) {}
   User(unsigned operands_num, Operands operands)
-    : _operands_num(operands_num), _operands(std::move(operands)) {
+    : _operands(std::move(operands)), _operands_num(operands_num) {
     DBG_ASSERT(_operands.size() <= _operands_num, "User() operands out of range");
   }
 
@@ -33,10 +33,9 @@ public:
     _operands[i].set(V);
   }
 
-  void AddValue(const SSAPtr& V) {
+  void AddValue(const SSAPtr &V) {
     DBG_ASSERT(_operands.size() < _operands_num, "AddValue() out of range");
     _operands.emplace_back(V, this);
-    _operands_num = _operands.size();
   }
 
   void RemoveValue(const SSAPtr& V) {
@@ -49,7 +48,6 @@ public:
                [&V](const Use &use) {
                  return use.get().get() == V;
                }), _operands.end());
-    _operands_num = _operands.size();
   }
 
   // access value in current user
@@ -73,7 +71,7 @@ public:
   auto end() const { return _operands.end(); }
 
   bool empty() const { return _operands.empty(); }
-  unsigned size() const { return _operands_num; }
+  unsigned size() const { return _operands.size(); }
 };
 }
 

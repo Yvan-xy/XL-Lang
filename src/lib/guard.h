@@ -1,12 +1,8 @@
-//
-// Created by dyf on 2020/11/30.
-//
-
 #ifndef RJIT_GUARD_H
 #define RJIT_GUARD_H
 
-#include <functional>
 #include <utility>
+#include <functional>
 
 class Guard {
 public:

@@ -35,5 +35,4 @@ add_executable(rjit main.cpp)
 target_link_libraries(rjit
         RJIT::front
         RJIT::mid
-#        RJIT::lib
 )

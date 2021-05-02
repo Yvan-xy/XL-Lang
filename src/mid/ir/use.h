@@ -41,7 +41,7 @@ public:
     if (V) addToList(V);
   }
 
-  SSAPtr get() const { return _value; }
+  const SSAPtr &get() const { return _value; }
 
   User *getUser() const { return _user; }
 

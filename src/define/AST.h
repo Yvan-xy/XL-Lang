@@ -8,9 +8,13 @@
 
 #include "define/type.h"
 #include "front/logger.h"
+#include "mid/ir/value.h"
 
 namespace RJIT::mid {
 class Dumper;
+
+class IRBuilder;
+
 namespace analyzer {
 class SemAnalyzer;
 }
@@ -19,6 +23,7 @@ class SemAnalyzer;
 
 namespace RJIT::AST {
 using TYPE::TypeInfoPtr;
+using mid::SSAPtr;
 
 enum class Operator {
   // unary
@@ -60,6 +65,8 @@ public:
   virtual void Dump(mid::Dumper *) = 0;
 
   virtual TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) = 0;
+
+  virtual SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) = 0;
 };
 
 class Stmt : public BaseAST {
@@ -85,6 +92,8 @@ public:
   void Dump(mid::Dumper *) override;
 
   TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+
+  SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) override;
 };
 
 
@@ -100,6 +109,8 @@ public:
   void Dump(mid::Dumper *) override;
 
   TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+
+  SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) override;
 };
 
 
@@ -115,6 +126,8 @@ public:
   void Dump(mid::Dumper *) override;
 
   TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+
+  SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) override;
 };
 
 class StringAST : public BaseAST {
@@ -129,6 +142,8 @@ public:
   void Dump(mid::Dumper *) override;
 
   TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+
+  SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) override;
 };
 
 class VariableAST : public BaseAST {
@@ -143,6 +158,8 @@ public:
   void Dump(mid::Dumper *) override;
 
   TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+
+  SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) override;
 };
 
 class PrimTypeAST : public BaseAST {
@@ -160,6 +177,8 @@ public:
   void Dump(mid::Dumper *) override;
 
   TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+
+  SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) override;
 };
 
 typedef std::unique_ptr<PrimTypeAST> PrimASTPtr;
@@ -181,6 +200,8 @@ public:
   void Dump(mid::Dumper *) override;
 
   TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+
+  SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) override;
 };
 
 class VariableDefAST : public BaseAST {
@@ -210,6 +231,8 @@ public:
   void Dump(mid::Dumper *) override;
 
   TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+
+  SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) override;
 };
 
 // Binary statement
@@ -235,13 +258,15 @@ public:
   void Dump(mid::Dumper *) override;
 
   TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+
+  SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) override;
 };
 
 class UnaryStmt : public Stmt {
 private:
-  Operator    _op;
+  Operator _op;
   std::string _op_str;
-  ASTPtr      _operand;
+  ASTPtr _operand;
 
 public:
   UnaryStmt(Operator op, ASTPtr operand_) : _op(op), _operand(std::move(operand_)) {
@@ -257,6 +282,8 @@ public:
   void Dump(mid::Dumper *) override;
 
   TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+
+  SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) override;
 };
 
 class ReturnStmt : public Stmt {
@@ -273,21 +300,25 @@ public:
   void Dump(mid::Dumper *) override;
 
   TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+
+  SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) override;
 };
 
 // statement block
 class CompoundStmt : public Stmt {
 private:
-  ASTPtrList stmts;
+  ASTPtrList _stmts;
 
 public:
-  explicit CompoundStmt(ASTPtrList stmts_) : stmts(std::move(stmts_)) {}
+  explicit CompoundStmt(ASTPtrList stmts_) : _stmts(std::move(stmts_)) {}
 
-  const ASTPtrList &getStmts() const { return stmts; }
+  const ASTPtrList &stmts() const { return _stmts; }
 
   void Dump(mid::Dumper *) override;
 
   TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+
+  SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) override;
 };
 
 // if-else statement
@@ -296,8 +327,8 @@ private:
   ASTPtr condition, then_, else_;
 
 public:
-  IfElseStmt(ASTPtr cond, ASTPtr then, ASTPtr _else) : condition(std::move(cond)), then_(std::move(then)),
-                                                       else_(std::move(_else)) {}
+  IfElseStmt(ASTPtr cond, ASTPtr then, ASTPtr _else)
+      : condition(std::move(cond)), then_(std::move(then)), else_(std::move(_else)) {}
 
   ASTPtr &getCondition() { return condition; }
 
@@ -308,6 +339,8 @@ public:
   void Dump(mid::Dumper *) override;
 
   TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+
+  SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) override;
 };
 
 class WhileStmt : public Stmt {
@@ -324,6 +357,8 @@ public:
   void Dump(mid::Dumper *) override;
 
   TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+
+  SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) override;
 };
 
 class CallStmt : public Stmt {
@@ -341,6 +376,8 @@ public:
   void Dump(mid::Dumper *) override;
 
   TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+
+  SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) override;
 };
 
 class BreakStmt : public Stmt {
@@ -348,6 +385,8 @@ public:
   void Dump(mid::Dumper *) override;
 
   TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+
+  SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) override;
 };
 
 class ContinueStmt : public Stmt {
@@ -355,6 +394,8 @@ public:
   void Dump(mid::Dumper *) override;
 
   TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+
+  SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) override;
 };
 
 class ProtoTypeAST : public BaseAST {
@@ -381,6 +422,8 @@ public:
   void Dump(mid::Dumper *) override;
 
   TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+
+  SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) override;
 };
 
 class FunctionDefAST : public Decl {
@@ -398,6 +441,8 @@ public:
   void Dump(mid::Dumper *) override;
 
   TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+
+  SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) override;
 };
 
 class FuncParamAST : public BaseAST {
@@ -418,6 +463,8 @@ public:
   void Dump(mid::Dumper *) override;
 
   TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;
+
+  SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) override;
 };
 
 template<typename T, typename... Args>

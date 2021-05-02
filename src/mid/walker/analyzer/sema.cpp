@@ -185,7 +185,7 @@ namespace RJIT::mid::analyzer {
     auto guard = !_in_func ? NewEnv() : Guard(nullptr);
     if (_in_func) _in_func = false;
 
-    for (auto &i : node->getStmts()) {
+    for (auto &i : node->stmts()) {
       auto type = i->SemAnalyze(this);
       if (!type) return nullptr;
     }
@@ -286,7 +286,7 @@ namespace RJIT::mid::analyzer {
     auto protoType = node->getProtoType()->SemAnalyze(this);
     auto body = node->getBody()->SemAnalyze(this);
     if (!protoType || !body) return nullptr;
-    return node->set_ast_type(MakeVoid());
+    return node->set_ast_type(protoType);
   }
 
   TypeInfoPtr SemAnalyzer::visit(FuncParamAST *node) {
