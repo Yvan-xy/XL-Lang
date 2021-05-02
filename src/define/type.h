@@ -7,6 +7,8 @@
 #include <utility>
 #include <optional>
 
+#include "lib/debug.h"
+
 namespace RJIT::TYPE {
   enum class Type {
     Void,
@@ -49,6 +51,9 @@ namespace RJIT::TYPE {
     // return true if is function type
     virtual bool IsFunction() const = 0;
 
+    // return true if is prime type
+    virtual bool IsPrime() const = 0;
+
     // return the type of arguments of a function call
     virtual std::optional<TypePtrList> GetArgsType() const = 0;
 
@@ -60,6 +65,11 @@ namespace RJIT::TYPE {
 
     // return a new type with specific value type (left/right)
     virtual TypeInfoPtr GetValueType(bool is_right) const = 0;
+
+    virtual bool operator==(TypeInfo & typeInfo) {
+      DBG_ASSERT(0, "can't compare with Base type");
+      return false;
+    }
   };
 
   class PrimType : public TypeInfo {
@@ -69,7 +79,7 @@ namespace RJIT::TYPE {
   public:
     PrimType(Type tp, bool ir) : type_(tp), is_right_(ir) {}
 
-    ~PrimType() {}
+    ~PrimType() override = default;
 
     Type GetType() override { return type_; }
 
@@ -91,6 +101,8 @@ namespace RJIT::TYPE {
              t <= static_cast<int>(Type::UInt32);
     }
 
+    bool IsPrime() const override { return true; }
+
     bool IsConst() const override { return false; }
 
     bool IsFunction() const override { return false; }
@@ -103,7 +115,11 @@ namespace RJIT::TYPE {
 
     std::string GetTypeId() const override;
 
+    Type type() const { return type_; }
+
     TypeInfoPtr GetValueType(bool is_right) const override;
+
+    bool operator==(PrimType &typeInfo) { return type_ == typeInfo.type_; }
   };
 
   class ConstType : public TypeInfo {
@@ -125,6 +141,8 @@ namespace RJIT::TYPE {
     bool IsConst() const override { return true; }
 
     bool IsFunction() const override { return type->IsFunction(); }
+
+    bool IsPrime() const override { return type->IsPrime(); }
 
     std::optional<TypePtrList> GetArgsType() const override { return {}; }
 
@@ -160,6 +178,8 @@ namespace RJIT::TYPE {
     bool IsConst() const override { return false; }
 
     bool IsFunction() const override { return true; }
+
+    bool IsPrime() const override { return false; }
 
     std::optional<TypePtrList> GetArgsType() const override { return args_; }
 

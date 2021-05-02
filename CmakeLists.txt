@@ -7,6 +7,16 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+add_definitions (-DBUILD_RJIT)
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_definitions (-DDEBUG -DIs_True_On)
+    set (OPT_FLAGS "-O0")
+else ()
+    add_definitions (-DNDEBUG)
+    set (OPT_FLAGS "-O2")
+endif ()
+
 set(RJIT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(RJIT_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 

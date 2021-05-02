@@ -36,7 +36,7 @@ namespace RJIT::front {
     static std::size_t warningNum() { return warn_num; }
   };
 
-  typedef std::unique_ptr<Logger> LoggerPtr;
+  typedef std::shared_ptr<Logger> LoggerPtr;
 }
 
 
