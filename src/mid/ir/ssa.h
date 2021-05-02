@@ -144,7 +144,7 @@ public:
   }
 
 
-  unsigned GetNumOperands() const { return 1; }
+  static unsigned GetNumOperands() { return 1; }
 };
 
 //===----------------------------------------------------------------------===//
@@ -154,12 +154,12 @@ public:
 class BinaryOperator : public Instruction {
 public:
   BinaryOperator(BinaryOps opcode, const SSAPtr &S1,
-                 const SSAPtr &S2, const SSAPtr &IB = nullptr);
+                 const SSAPtr &S2, const TYPE::TypeInfoPtr &type, const SSAPtr &IB = nullptr);
 
   BinaryOperator(BinaryOps opcode, const SSAPtr &S1,
-                 const SSAPtr &S2, const BlockPtr &IAE);
+                 const SSAPtr &S2, const TYPE::TypeInfoPtr &type, const BlockPtr &IAE);
 
-  unsigned GetNumOperands() const { return 2; }
+  static unsigned GetNumOperands() { return 2; }
 
   static BinaryPtr Create(BinaryOps opcode, const SSAPtr &S1,
                                 const SSAPtr &S2, const SSAPtr &IB = nullptr);
@@ -189,6 +189,18 @@ public:
     return Create(Instruction::OPC, V1, V2, IB);                     \
   }
 #include "instruction.inc"
+
+
+  /// Helper functions to construct and inspect unary operations (NEG and NOT)
+  /// via binary operators SUB and XOR:
+  ///
+  /// createNeg, createNot - Create the NEG and NOT
+  ///     instructions out of SUB and XOR instructions.
+  ///
+  static BinaryPtr createNeg(const SSAPtr &Op, const SSAPtr &InsertBefore = nullptr);
+  static BinaryPtr createNeg(const SSAPtr &Op, const BlockPtr &InsertAtEnd);
+  static BinaryPtr createNot(const SSAPtr &Op, const SSAPtr  &InsertBefore = nullptr);
+  static BinaryPtr createNot(const SSAPtr &Op, const BlockPtr &InsertAtEnd);
 };
 
 

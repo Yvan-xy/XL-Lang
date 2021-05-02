@@ -129,7 +129,19 @@ namespace RJIT::mid::analyzer {
   }
 
   TypeInfoPtr SemAnalyzer::SemAnalyze(UnaryStmt *node) {
-    return nullptr;
+    std::string info;
+    auto operand_type = node->Operand()->SemAnalyze(this);
+    if (!operand_type->IsInteger() && !operand_type->IsBool()) {
+      info = "unary operand is not integer or bool type";
+      return LogError(node->Logger(), info);
+    }
+
+    if (node->op() == Operator::Dam) {
+      info = "unary operator is Dam";
+      return LogError(node->Logger(), info);
+    }
+
+    return node->set_ast_type(operand_type);
   }
 
   TypeInfoPtr SemAnalyzer::SemAnalyze(ReturnStmt *node) {
@@ -190,6 +202,10 @@ namespace RJIT::mid::analyzer {
 
     // check return type here
     auto callee = symbol->GetItem(node->getSymbol());
+    if (callee == nullptr) {
+      info = "function '" + node->getSymbol() + "' undefined";
+      return LogError(node->Logger(), info);
+    }
     auto ret_typeinfo = callee->GetReturnType();
 
     // check parameter reference here
@@ -210,7 +226,7 @@ namespace RJIT::mid::analyzer {
         }
 
         auto args_types = args.value();
-        for (int i = 0; i < args_types.size(); i++) {
+        for (std::size_t i = 0; i < args_types.size(); i++) {
           if (args_types[i]->GetTypeId() != real_args[i]->GetTypeId()) {
             info = "function '" + node->getSymbol() + "(";
             auto tail = --(args_types.end());

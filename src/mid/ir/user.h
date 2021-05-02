@@ -1,8 +1,9 @@
 #ifndef RJIT_USER_H
 #define RJIT_USER_H
 
-#include <utility>
 #include <vector>
+#include <utility>
+#include <algorithm>
 #include "value.h"
 
 namespace RJIT::mid {

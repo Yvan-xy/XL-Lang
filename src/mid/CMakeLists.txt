@@ -1,11 +1,11 @@
 add_library(mid
+        ir/ssa.cpp
+        ir/use.cpp
+        ir/value.cpp
+        ir/module.cpp
         visitor/visitor.cpp
         walker/dumper/dumper.cpp
         walker/analyzer/sema.cpp
-        walker/analyzer/sema.h
-        ir/value.cpp
-        ir/use.cpp
-        ir/ssa.cpp
         )
 
 target_compile_features(mid PUBLIC cxx_std_17)

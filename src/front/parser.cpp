@@ -7,7 +7,7 @@
 using namespace RJIT::TYPE;
 
 namespace RJIT::front {
-  static const std::string UnaryOperator[] = {"!", "-", "@", "$", "%", "^"};
+  static const std::string UnaryOperator[] = {"!", "-", "@", "$", "%", "^", "~"};
 
   void Parser::setPrecedence() {
     BinopPrecedence["="] = 2;
@@ -342,7 +342,7 @@ namespace RJIT::front {
       std::string op = curToken.getOperValue();
       nextToken();// eat operator
       if (auto operand = ParseUnary()) {
-        return MakeAST<UnaryStmt>(std::move(log), op, std::move(operand));
+        return MakeAST<UnaryStmt>(std::move(log), string2Operator(op, true), std::move(operand));
       }
     } else {
       return ParsePrimary();
@@ -634,6 +634,8 @@ namespace RJIT::front {
       return ParseParenExpr();
     } else if (isReturn()) {
       return ParseReturn();
+    } else {
+      return ParseExpression();
     }
     return nullptr;
   }

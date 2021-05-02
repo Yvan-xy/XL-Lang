@@ -34,6 +34,8 @@ private:
   TYPE::TypeInfoPtr _type;
 
 public:
+  virtual ~Value() = default;
+
   void addUse(Use *U) { _use_list.emplace_back(U); }
 
   void removeUse(Use *U) { _use_list.remove(U); }

@@ -1,4 +1,6 @@
 #include "ssa.h"
+#include "constant.h"
+#include "define/type.h"
 
 namespace RJIT::mid {
 
@@ -111,14 +113,14 @@ std::string Instruction::GetOpcodeAsString(unsigned int opcode) const {
 //===----------------------------------------------------------------------===//
 
 BinaryOperator::BinaryOperator(Instruction::BinaryOps opcode, const SSAPtr &S1,
-   const SSAPtr &S2, const SSAPtr &IB)
+   const SSAPtr &S2, const TYPE::TypeInfoPtr &type, const SSAPtr &IB)
    : Instruction(opcode, 2, IB) {
   AddValue(S1);
   AddValue(S2);
 }
 
 BinaryOperator::BinaryOperator(Instruction::BinaryOps opcode, const SSAPtr &S1,
-   const SSAPtr &S2, const BlockPtr &IAE)
+   const SSAPtr &S2, const TYPE::TypeInfoPtr &type, const BlockPtr &IAE)
    : Instruction(opcode, 2, IAE){
   AddValue(S1);
   AddValue(S2);
@@ -131,9 +133,13 @@ BinaryOperator::Create(Instruction::BinaryOps opcode, const SSAPtr &S1,
   auto s2_type = S2->type();
   DBG_ASSERT(s1_type->IsPrime(), "S1 is not prime type");
   DBG_ASSERT(s2_type->IsPrime(), "S2 is not prime type");
+  DBG_ASSERT(s1_type->IsInteger(), "binary operator can only being performed on int");
 
   DBG_ASSERT(s1_type == s2_type, "S1 has different type with S2");
-  return std::make_shared<BinaryOperator>(opcode, S1, S2, IB);
+  if (s1_type->IsNotShortThan(s2_type))
+    return std::make_shared<BinaryOperator>(opcode, S1, S2, s1_type, IB);
+  else
+    return std::make_shared<BinaryOperator>(opcode, S1, S2, s2_type, IB);
 }
 
 BinaryPtr
@@ -143,10 +149,45 @@ BinaryOperator::Create(Instruction::BinaryOps opcode, const SSAPtr &S1,
   auto s2_type = S2->type();
   DBG_ASSERT(s1_type->IsPrime(), "S1 is not prime type");
   DBG_ASSERT(s2_type->IsPrime(), "S2 is not prime type");
+  DBG_ASSERT(s1_type->IsInteger(), "binary operator can only being performed on int");
 
   DBG_ASSERT(s1_type == s2_type, "S1 has different type with S2");
-  return std::make_shared<BinaryOperator>(opcode, S1, S2, IAE);
+  if (s1_type->IsNotShortThan(s2_type))
+    return std::make_shared<BinaryOperator>(opcode, S1, S2, s1_type, IAE);
+  else
+    return std::make_shared<BinaryOperator>(opcode, S1, S2, s2_type, IAE);
+}
 
+BinaryPtr BinaryOperator::createNeg(const SSAPtr &Op, const SSAPtr &InsertBefore) {
+  auto typeInfo = Op->type();
+  DBG_ASSERT(typeInfo->IsInteger(), "Neg operator is not integer");
+  auto zero = GetZeroValue(typeInfo->GetType());
+  return std::make_shared<BinaryOperator>(Instruction::Sub, zero, Op,
+                                          typeInfo, InsertBefore);
+}
+
+BinaryPtr BinaryOperator::createNeg(const SSAPtr &Op, const BlockPtr &InsertAtEnd) {
+  auto typeInfo = Op->type();
+  DBG_ASSERT(typeInfo->IsInteger(), "Neg operator is not integer");
+  auto zero = GetZeroValue(typeInfo->GetType());
+  return std::make_shared<BinaryOperator>(Instruction::Sub, zero, Op,
+                                          typeInfo, InsertAtEnd);
+}
+
+BinaryPtr BinaryOperator::createNot(const SSAPtr &Op, const SSAPtr &InsertBefore) {
+  auto typeInfo = Op->type();
+  DBG_ASSERT(typeInfo->IsInteger(), "Neg operator is not integer");
+  auto zero = GetZeroValue(typeInfo->GetType());
+  return std::make_shared<BinaryOperator>(Instruction::Sub, zero, Op,
+                                          typeInfo, InsertBefore);
+}
+
+BinaryPtr BinaryOperator::createNot(const SSAPtr &Op, const BlockPtr &InsertAtEnd) {
+  auto typeInfo = Op->type();
+  DBG_ASSERT(typeInfo->IsInteger(), "Neg operator is not integer");
+  auto zero = GetZeroValue(typeInfo->GetType());
+  return std::make_shared<BinaryOperator>(Instruction::Sub, zero, Op,
+                                          typeInfo, InsertAtEnd);
 }
 
 void BasicBlock::AddInstBefore(const SSAPtr &insertBefore, const SSAPtr &inst) {

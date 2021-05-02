@@ -2,6 +2,8 @@
 #define RJIT_USE_H
 
 #include <list>
+#include <vector>
+#include <memory>
 #include "lib/debug.h"
 
 
@@ -11,11 +13,11 @@ class Use;
 class User;
 class Value;
 
-using UseList  = std::list<Use *>;
-using Operands = std::vector<Use>;
-using SSAPtr   = std::shared_ptr<Value>;
+using UseList    = std::list<Use *>;
+using Operands   = std::vector<Use>;
+using SSAPtr     = std::shared_ptr<Value>;
 using SSAPtrList = std::list<SSAPtr>;
-using UserPtr = std::shared_ptr<User>;
+using UserPtr    = std::shared_ptr<User>;
 
 class Use {
 private:

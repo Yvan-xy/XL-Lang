@@ -51,8 +51,8 @@ namespace RJIT::mid {
 
   void Dumper::visit(UnaryStmt *node) {
     os << "[ ";
-    node->getOperand()->Dump(this);
-    os << " : " << node->getOper() << " ]";
+    node->Operand()->Dump(this);
+    os << " : " << node->getOpString() << " ]";
   }
 
   void Dumper::visit(ReturnStmt *node) {
