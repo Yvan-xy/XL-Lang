@@ -9,11 +9,12 @@ namespace RJIT::mid {
 
 class BasicBlock : public User {
 private:
-  SSAPtrList    _insts;
-  std::string   _name;    // block name
-  UserPtr       _parent;  // block's parent(function)
+  SSAPtrList _insts;
+  std::string _name;    // block name
+  UserPtr _parent;  // block's parent(function)
 
 public:
+
   BasicBlock(UserPtr parent, std::string name)
       : _name(std::move(name)), _parent(std::move(parent)) {}
 
@@ -25,53 +26,63 @@ public:
 
   //getters
   SSAPtrList &insts() { return _insts; }
+
   const UserPtr &parent() const { return _parent; }
+
   auto inst_begin() const { return _insts.begin(); }
-  auto inst_end()   const { return _insts.end();   }
+
+  auto inst_end() const { return _insts.end(); }
 };
 
 class Instruction : public User {
 private:
   unsigned _opcode;
   BlockPtr _parent;
-  InstPtr  _prev, _next;
+  InstPtr _prev, _next;
 
   void SetPrev(InstPtr P) { _prev = std::move(P); }
+
   void SetNext(InstPtr N) { _next = std::move(N); }
 
-  void SetParent(const BlockPtr& B);
+  void SetParent(const BlockPtr &B);
 
   // getNext/Prev - Return the next or previous instruction in the list.  The
   // last node in the list is a terminator instruction.
-  InstPtr GetNext()              { return _next; }
+  InstPtr GetNext() { return _next; }
+
   const InstPtr &GetNext() const { return _next; }
-  InstPtr GetPrev()              { return _prev; }
+
+  InstPtr GetPrev() { return _prev; }
+
   const InstPtr &GetPrev() const { return _prev; }
 
 public:
   Instruction(unsigned opcode, unsigned operand_nums,
-              const SSAPtr& insertBefore = nullptr);
+              const SSAPtr &insertBefore = nullptr);
 
   Instruction(unsigned opcode, unsigned operand_nums,
-              const Operands& operands, const SSAPtr& insertBefore = nullptr);
+              const Operands &operands, const SSAPtr &insertBefore = nullptr);
 
   Instruction(unsigned opcode, unsigned operand_nums,
               const BlockPtr &insertAtEnd);
 
   Instruction(unsigned opcode, unsigned operand_nums,
-              const Operands& operands, const BlockPtr &insertAtEnd);
+              const Operands &operands, const BlockPtr &insertAtEnd);
 
   virtual ~Instruction() = default;
 
   // Accessor methods...
   //
-        BlockPtr  GetParent()       { return _parent; }
+  BlockPtr GetParent() override { return _parent; }
+
   const BlockPtr &GetParent() const { return _parent; }
 
   unsigned opcode() const { return _opcode; }
+
   std::string GetOpcodeAsString() const {
     return GetOpcodeAsString(opcode());
   }
+
   std::string GetOpcodeAsString(unsigned opcode) const;
 
   // Determine if the opcode is one of the terminators instruction.
@@ -119,7 +130,7 @@ public:
   // Exported opcode enumerations...
   // TermOps, BinaryOps, MemoryOps, CastOps, OtherOps
   //
-  #include "opcode.inc"
+#include "opcode.inc"
 };
 
 //===----------------------------------------------------------------------===//
@@ -131,21 +142,29 @@ public:
 //
 class TerminatorInst : public Instruction {
 public:
-  TerminatorInst(Instruction::TermOps opcode, const Operands& operands,
+  TerminatorInst(Instruction::TermOps opcode,
                  unsigned operands_num, const SSAPtr &insertBefore = nullptr)
-    : Instruction(opcode, operands_num, operands, insertBefore) {}
+      : Instruction(opcode, operands_num, insertBefore) {}
 
-  TerminatorInst(Instruction::TermOps opcode, const Operands& operands,
+  TerminatorInst(Instruction::TermOps opcode, const Operands &operands,
+                 unsigned operands_num, const SSAPtr &insertBefore = nullptr)
+      : Instruction(opcode, operands_num, operands, insertBefore) {}
+
+  TerminatorInst(Instruction::TermOps opcode,
                  unsigned operands_num, const BlockPtr &insertAtEnd)
-    : Instruction(opcode, operands_num, operands, insertAtEnd) {}
+      : Instruction(opcode, operands_num, insertAtEnd) {}
+
+  TerminatorInst(Instruction::TermOps opcode, const Operands &operands,
+                 unsigned operands_num, const BlockPtr &insertAtEnd)
+      : Instruction(opcode, operands_num, operands, insertAtEnd) {}
 
   /* Virtual methods - Terminators should overload these methods. */
 
   // Return the number of successors that this terminator has.
   virtual unsigned GetSuccessorNum() const = 0;
 
-  virtual BlockPtr GetSuccessor(unsigned idx) const = 0;
-  virtual void SetSuccessor(unsigned idx, BlockPtr B) = 0;
+  virtual SSAPtr GetSuccessor(unsigned idx) const = 0;
+  virtual void SetSuccessor(unsigned idx, const BlockPtr &B) = 0;
 };
 
 //===----------------------------------------------------------------------===//
@@ -154,12 +173,12 @@ public:
 
 class UnaryInstruction : public Instruction {
 public:
-  UnaryInstruction(unsigned opcode, const SSAPtr& V, const SSAPtr& IB = nullptr)
+  UnaryInstruction(unsigned opcode, const SSAPtr &V, const SSAPtr &IB = nullptr)
       : Instruction(opcode, 1, IB) {
     AddValue(V);
   }
 
-  UnaryInstruction(unsigned opcode, const SSAPtr& V, const BlockPtr & IAE)
+  UnaryInstruction(unsigned opcode, const SSAPtr &V, const BlockPtr &IAE)
       : Instruction(opcode, 1, IAE) {
     AddValue(V);
   }
@@ -183,10 +202,10 @@ public:
   static unsigned GetNumOperands() { return 2; }
 
   static BinaryPtr Create(BinaryOps opcode, const SSAPtr &S1,
-                                const SSAPtr &S2, const SSAPtr &IB = nullptr);
+                          const SSAPtr &S2, const SSAPtr &IB = nullptr);
 
   static BinaryPtr Create(BinaryOps opcode, const SSAPtr &S1,
-                                const SSAPtr &S2, const BlockPtr &IAE);
+                          const SSAPtr &S2, const BlockPtr &IAE);
 
   // Create* - These methods just forward to create, and are useful when you
   // statically know what type of instruction you're going to create.  These
@@ -195,6 +214,7 @@ public:
   static BinaryPtr Create##OPC(const SSAPtr &V1, const SSAPtr &V2) { \
     return Create(Instruction::OPC, V1, V2);                         \
   }
+
 #include "instruction.inc"
 
 #define HANDLE_BINARY_INST(N, OPC, ClASS)                            \
@@ -202,6 +222,7 @@ public:
             const BlockPtr &IAE) {                                   \
     return Create(Instruction::OPC, V1, V2, IAE);                    \
   }
+
 #include "instruction.inc"
 
 #define HANDLE_BINARY_INST(N, OPC, ClASS)                            \
@@ -209,6 +230,7 @@ public:
             const SSAPtr &IB) {                                      \
     return Create(Instruction::OPC, V1, V2, IB);                     \
   }
+
 #include "instruction.inc"
 
 
@@ -220,7 +242,7 @@ public:
   ///
   static BinaryPtr createNeg(const SSAPtr &Op, const SSAPtr &InsertBefore = nullptr);
   static BinaryPtr createNeg(const SSAPtr &Op, const BlockPtr &InsertAtEnd);
-  static BinaryPtr createNot(const SSAPtr &Op, const SSAPtr  &InsertBefore = nullptr);
+  static BinaryPtr createNot(const SSAPtr &Op, const SSAPtr &InsertBefore = nullptr);
   static BinaryPtr createNot(const SSAPtr &Op, const BlockPtr &InsertAtEnd);
 };
 
@@ -229,7 +251,7 @@ public:
 class Function : public User {
 private:
   std::vector<SSAPtr> _args;
-  std::string         _function_name;
+  std::string _function_name;
 
 public:
   explicit Function(std::string name) : _function_name(std::move(name)) {}
@@ -242,19 +264,93 @@ public:
 
   // getters
   const std::string &GetFunctionName() const { return _function_name; }
+
   const std::vector<SSAPtr> &args() { return _args; }
 };
 
-class JumpInst : public User {
+class JumpInst : public TerminatorInst {
 public:
-  explicit JumpInst(const SSAPtr &target) {
+  explicit JumpInst(const SSAPtr &target, const SSAPtr & IB = nullptr)
+    : TerminatorInst(Instruction::TermOps::Jmp,1, IB) {
     AddValue(target);
+  }
+
+  unsigned GetSuccessorNum() const override { return 1; }
+
+  SSAPtr GetSuccessor(unsigned idx) const override {
+    DBG_ASSERT(idx == 0, "index out of range");
+    return target();
+  };
+
+  void SetSuccessor(unsigned idx, const BlockPtr &B) override {
+    DBG_ASSERT(idx == 0, "index out of range");
+    this->SetOperand(0, B);
   }
 
   const SSAPtr &target() const { return (*this)[0].get(); }
 };
 
+// store to alloc
+// operands: value, pointer
+class StoreInst : public Instruction {
+public:
+  StoreInst(const SSAPtr &V, const SSAPtr &P, const SSAPtr &IB = nullptr)
+  : Instruction(Instruction::MemoryOps::Store, 2, IB) {
+    AddValue(V);
+    AddValue(P);
+  }
+
+  // getters
+  const SSAPtr &value() const { return (*this)[0].get(); }
+
+  const SSAPtr &pointer() const { return (*this)[1].get(); }
+};
+
+// alloc on stack
+class AllocaInst : public User {
+public:
+  AllocaInst() = default;
+};
+
+// load from pointer
+class LoadInst : public Instruction {
+public:
+  LoadInst(const SSAPtr &ptr, const SSAPtr &IB = nullptr)
+    : Instruction(Instruction::MemoryOps::Load, 1, IB) {
+    AddValue(ptr);
+  }
+
+  // getter/setter
+  void SetPointer(const SSAPtr &ptr)    { (*this)[0].set(ptr); }
+  const SSAPtr &Pointer()         const { return (*this)[0].get(); }
+};
+
+
+// argument reference
+class ArgRefSSA : public Value {
+private:
+  SSAPtr      _func;
+  std::size_t _index;
+
+public:
+  ArgRefSSA(const SSAPtr &func, std::size_t index)
+    : _func(func), _index(index) {}
+
+  // getter
+  const SSAPtr &func()  const { return _func;  }
+  std::size_t   index() const { return _index; }
+};
+
+// return from function
+// operand: value
+class ReturnInst : public User {
+public:
+  explicit ReturnInst(const SSAPtr &value) { AddValue(value); }
+
+  // getter/setter
+  const SSAPtr &RetVal()    const { return (*this)[0].get(); }
+  void SetRetVal(const SSAPtr &value) { (*this)[0].set(value); }
+};
 
 }
-
 #endif //RJIT_SSA_H

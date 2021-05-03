@@ -21,7 +21,10 @@ using ValueEnvPtr  = lib::Nested::NestedMapPtr<std::string, SSAPtr>;
  */
 class Module {
 private:
+  SSAPtr                       _return_val;
   UserList                     _global_vars;
+  BlockPtr                     _func_entry;
+  BlockPtr                     _func_exit;
   BlockPtr                     _insert_point;
   ValueEnvPtr                  _value_symtab;
   FunctionList                 _functions;
@@ -53,7 +56,7 @@ public:
   // new value env
   Guard NewEnv();
 
-  FuncPtr CreateFunction(const std::string &name, const TYPE::TypeInfoPtr &type);
+  FuncPtr  CreateFunction(const std::string &name, const TYPE::TypeInfoPtr &type);
 
   BlockPtr CreateBlock(const UserPtr &parent);
 
@@ -61,20 +64,39 @@ public:
 
   SSAPtr   CreateJump(const BlockPtr &target);
 
-  UserPtr GetFunction(const std::string &func_name);
+  SSAPtr   CreateStore(const SSAPtr &V, const SSAPtr &P);
+
+  SSAPtr   CreateArgRef(const SSAPtr &func, std::size_t index);
+
+  SSAPtr   CreateAlloca(const TYPE::TypeInfoPtr &type);
+
+  SSAPtr   CreateReturn(const SSAPtr &value);
+
+  SSAPtr   CreateLoad(const SSAPtr &ptr);
+
+  UserPtr  GetFunction(const std::string &func_name);
 
   // setters
   // set current context (logger)
   Guard SetContext(const front::Logger &logger);
   // set current context (pointer to logger)
   Guard SetContext(const front::LoggerPtr &logger);
-  void SetInsertPoint(const BlockPtr &BB) { _insert_point = BB; }
+  void SetRetValue   (const SSAPtr  &val)  { _return_val = val;  }
+  void SetFuncEntry  (const BlockPtr &BB)  { _func_entry = BB;   }
+  void SetFuncExit   (const BlockPtr &BB)  { _func_exit = BB;    }
+  void SetInsertPoint(const BlockPtr &BB)  {
+    _insert_point = BB;
+    _insert_pos = BB->insts().end();
+  }
 
   // getters
+  SSAPtr          &ReturnValue() { return _return_val;   }
   UserList        &GlobalVars()  { return _global_vars;  }
   ValueEnvPtr     &ValueSymTab() { return _value_symtab; }
   FunctionList    &Functions()   { return _functions;    }
   BlockPtr        &InsertPoint() { return _insert_point; }
+  BlockPtr        &FuncEntry()   { return _func_entry;   }
+  BlockPtr        &FuncExit()    { return _func_exit;    }
 };
 
 

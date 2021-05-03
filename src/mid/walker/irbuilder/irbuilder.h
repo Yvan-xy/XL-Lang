@@ -45,6 +45,10 @@ public:
   SSAPtr visit(TranslationUnitDecl *) override;
 
   void EmitIR() { _translation_decl_unit->CodeGeneAction(this); }
+
+  // print error message
+  SSAPtr LogError(const front::LoggerPtr &log, std::string &message);
+  SSAPtr LogError(const front::LoggerPtr &log, std::string &message, const std::string &id);
 };
 
 }

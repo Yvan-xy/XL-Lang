@@ -220,19 +220,19 @@ TypeInfoPtr ConstType::GetValueType(bool is_right) const {
 
 std::string FuncType::GetTypeId() const {
   std::ostringstream oss;
-  oss << '$' << args_.size() << 'f';
-  for (const auto &i : args_) oss << i->GetTypeId();
+  oss << '$' << _args.size() << 'f';
+  for (const auto &i : _args) oss << i->GetTypeId();
   oss << '$';
-  oss << ret_->GetTypeId();
+  oss << _ret->GetTypeId();
   return oss.str();
 }
 
 TypeInfoPtr FuncType::GetValueType(bool is_right) const {
-  return std::make_shared<FuncType>(args_, ret_, is_right);
+  return std::make_shared<FuncType>(_args, _ret, is_right);
 }
 
 TypeInfoPtr FuncType::GetReturnType() const {
-  return ret_;
+  return _ret;
 }
 bool FuncType::operator==(const TypeInfoPtr &typeInfo) {
   DBG_ASSERT(typeInfo->IsFunction(), "compare with non-function type");
@@ -240,21 +240,24 @@ bool FuncType::operator==(const TypeInfoPtr &typeInfo) {
   // compare return type
   auto ret = typeInfo->GetReturnType();
 
-  if (ret_ != ret) return false;
+  if (_ret != ret) return false;
 
   // compare parameters
   auto args = typeInfo->GetArgsType().value();
 
   // check size first
-  if (args_.size() != args.size()) {
+  if (_args.size() != args.size()) {
     return false;
   }
 
   for (std::size_t i = 0; i < args.size(); i++) {
-    if (args[i] != args_[i]) return false;
+    if (args[i] != _args[i]) return false;
   }
   return true;
 }
 
+TypeInfoPtr PointerType::GetValueType(bool is_right) const {
+  return std::make_shared<PointerType>(_base, is_right);
+}
 
 }

@@ -45,7 +45,6 @@ BlockPtr Module::CreateBlock(const UserPtr &parent) {
   return CreateBlock(parent, "");
 }
 
-// TODO: fix the type cast
 BlockPtr Module::CreateBlock(const UserPtr &parent, const std::string &name) {
   DBG_ASSERT((parent != nullptr) && parent->type()->IsFunction(),
              "block's parent should be function type");
@@ -64,6 +63,58 @@ SSAPtr Module::CreateJump(const BlockPtr &target) {
   // add the use to predecessor
   target->AddValue(std::static_pointer_cast<Value>(_insert_point));
   return jump;
+}
+
+// TODO: add necessary cast before store
+SSAPtr Module::CreateStore(const SSAPtr &V, const SSAPtr &P) {
+  auto store = AddInst<StoreInst>(V, P);
+  store->set_type(nullptr);
+  return store;
+}
+
+SSAPtr Module::CreateArgRef(const SSAPtr &func, std::size_t index) {
+  // checking
+  auto args_type = *func->type()->GetArgsType();
+  DBG_ASSERT(index < args_type.size(), "index out of range");
+
+  // set arg type
+  auto arg_ref = MakeSSA<ArgRefSSA>(func, index);
+  arg_ref->set_type(args_type[index]);
+
+  // update function
+  std::dynamic_pointer_cast<Function>(func)->set_arg(index, arg_ref);
+  return arg_ref;
+}
+
+SSAPtr Module::CreateAlloca(const TYPE::TypeInfoPtr &type) {
+  // set insert point to entry block
+  auto insert_point = _insert_point;
+  SetInsertPoint(_func_entry);
+
+  // create alloca and insert it to entry
+  DBG_ASSERT(!type->IsVoid(), "alloc type can't be void");
+  auto alloca = AddInst<AllocaInst>();
+  auto ptr_type = TYPE::MakePointerType(type);
+  alloca->set_type(ptr_type);
+
+  // recover insert point to previous block
+  SetInsertPoint(insert_point);
+  return alloca;
+}
+
+// TODO: add necessary cast
+SSAPtr Module::CreateReturn(const SSAPtr &value) {
+  auto ret = AddInst<ReturnInst>(value);
+  ret->set_type(nullptr);
+  return ret;
+}
+
+SSAPtr Module::CreateLoad(const SSAPtr &ptr) {
+  auto type = ptr->type();
+  DBG_ASSERT(type->IsPointer(), "loading from non-pointer type is forbidden");
+  auto load = AddInst<LoadInst>(ptr);
+  load->set_type(ptr->type()->GetDereferenceType());
+  return load;
 }
 
 

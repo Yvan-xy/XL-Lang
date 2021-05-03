@@ -67,6 +67,8 @@ public:
   virtual TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) = 0;
 
   virtual SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) = 0;
+
+  const TypeInfoPtr &AstType() const { return ast_type; }
 };
 
 class Stmt : public BaseAST {
@@ -400,24 +402,24 @@ public:
 
 class ProtoTypeAST : public BaseAST {
 private:
-  std::string funcName;
-  ASTPtrList args;
-  TYPE::Type type;
-  std::string type_str;
+  std::string _funcName;
+  ASTPtrList  _args;
+  TYPE::Type  _ret_type;
+  std::string _type_str;
 
 public:
   ProtoTypeAST(std::string name, ASTPtrList args_, TYPE::Type type_) :
-      funcName(std::move(name)), args(std::move(args_)), type(type_) {
-    type_str = TYPE::type2String(type);
+      _funcName(std::move(name)), _args(std::move(args_)), _ret_type(type_) {
+    _type_str = TYPE::type2String(_ret_type);
   }
 
-  std::string getFuncName() { return funcName; }
+  std::string getFuncName() { return _funcName; }
 
-  ASTPtrList &getArgs() { return args; }
+  ASTPtrList &getArgs() { return _args; }
 
-  const std::string &getReturnTypeStr() const { return type_str; }
+  const std::string &getReturnTypeStr() const { return _type_str; }
 
-  TYPE::Type getReturnType() const { return type; }
+  TYPE::Type getReturnType() const { return _ret_type; }
 
   void Dump(mid::Dumper *) override;
 

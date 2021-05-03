@@ -16,9 +16,13 @@ private:
 public:
   User() : _operands_num(0) {}
   explicit User(unsigned operands_num) : _operands_num(operands_num) {}
-  User(unsigned operands_num, Operands operands)
-    : _operands(std::move(operands)), _operands_num(operands_num) {
+
+  User(unsigned operands_num, const Operands &operands)
+    : _operands_num(operands_num) {
     DBG_ASSERT(_operands.size() <= _operands_num, "User() operands out of range");
+    for (const auto &it : operands) {
+      AddValue(it.get());
+    }
   }
 
   unsigned operandNum() const { return _operands_num; }
@@ -34,7 +38,7 @@ public:
   }
 
   void AddValue(const SSAPtr &V) {
-    DBG_ASSERT(_operands.size() < _operands_num, "AddValue() out of range");
+    DBG_ASSERT((_operands.size() < _operands_num) || ( _operands_num == 0), " out of range");
     _operands.emplace_back(V, this);
   }
 
