@@ -1,7 +1,7 @@
 #ifndef RJIT_CONSTANT_H
 #define RJIT_CONSTANT_H
 
-#include "user.h"
+#include "mid/ir/usedef/user.h"
 #include "define/type.h"
 
 namespace RJIT::mid {

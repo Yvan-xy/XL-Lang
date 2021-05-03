@@ -3,7 +3,7 @@
 
 #include <utility>
 
-#include "user.h"
+#include "mid/ir/usedef/user.h"
 
 namespace RJIT::mid {
 

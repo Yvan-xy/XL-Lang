@@ -8,7 +8,7 @@
 
 #include "define/type.h"
 #include "front/logger.h"
-#include "mid/ir/value.h"
+#include "mid/ir/usedef/value.h"
 
 namespace RJIT::mid {
 class Dumper;

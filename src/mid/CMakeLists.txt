@@ -1,8 +1,8 @@
 add_library(mid
         ir/ssa.cpp
-        ir/use.cpp
-        ir/value.cpp
         ir/module.cpp
+        ir/usedef/use.cpp
+        ir/usedef/value.cpp
         visitor/visitor.cpp
         walker/dumper/dumper.cpp
         walker/analyzer/sema.cpp

@@ -1,7 +1,7 @@
 #ifndef RJIT_VALUE_H
 #define RJIT_VALUE_H
 
-#include "use.h"
+#include "mid/ir/usedef/use.h"
 #include "define/type.h"
 #include "front/logger.h"
 

@@ -1,5 +1,5 @@
-#include "use.h"
-#include "value.h"
+#include "mid/ir/usedef/use.h"
+#include "mid/ir/usedef/value.h"
 
 namespace RJIT::mid {
   void Use::removeFromList(const SSAPtr& V) {
