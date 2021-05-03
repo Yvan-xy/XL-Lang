@@ -93,37 +93,37 @@ public:
 
 class PrimType : public TypeInfo {
 private:
-  Type type_;
+  Type _type;
   bool is_right_;
 
 public:
-  PrimType(Type tp, bool ir) : type_(tp), is_right_(ir) {}
+  PrimType(Type tp, bool ir) : _type(tp), is_right_(ir) {}
 
   ~PrimType() override = default;
 
-  Type GetType() override { return type_; }
+  Type GetType() override { return _type; }
 
   std::size_t GetSize() const override;
 
   bool IsRightValue() const override { return is_right_; }
 
-  bool IsVoid() const override { return type_ == Type::Void; }
+  bool IsVoid() const override { return _type == Type::Void; }
 
   bool IsInteger() const override {
-    auto t = static_cast<int>(type_);
+    auto t = static_cast<int>(_type);
     return t >= static_cast<int>(Type::UInt8) &&
            t <= static_cast<int>(Type::Int32);
   }
 
   bool IsUnsigned() const override {
-    auto t = static_cast<int>(type_);
+    auto t = static_cast<int>(_type);
     return t == static_cast<int>(Type::UInt8) ||
            t == static_cast<int>(Type::UInt32);
   }
 
   bool IsPrime() const override { return true; }
 
-  bool IsBool() const override { return type_ == Type::Bool; }
+  bool IsBool() const override { return _type == Type::Bool; }
 
   bool IsConst() const override { return false; }
 
@@ -139,7 +139,7 @@ public:
 
   std::string GetTypeId() const override;
 
-  Type type() const { return type_; }
+  Type type() const { return _type; }
 
   TypeInfoPtr GetValueType(bool is_right) const override;
 
@@ -148,17 +148,17 @@ public:
   }
 
   bool operator==(const TypeInfoPtr &typeInfo) override {
-    return type_ == typeInfo->GetType();
+    return _type == typeInfo->GetType();
   }
 
   bool IsLonger(const TypeInfoPtr &type) override {
     DBG_ASSERT(type->IsPrime(), "can't compare with non-prime type");
-    return type_ > type->GetType();
+    return _type > type->GetType();
   }
 
   bool IsNotShortThan(const TypeInfoPtr &type) override {
     DBG_ASSERT(type->IsPrime(), "can't compare with non-prime type");
-    return type_ >= type->GetType();
+    return _type >= type->GetType();
   }
 };
 
@@ -272,9 +272,7 @@ public:
 
   TypeInfoPtr GetReturnType() const override { return nullptr; };
 
-  std::string GetTypeId() const override {
-    return _base->GetTypeId();
-  };
+  std::string GetTypeId() const override;
 
   TypeInfoPtr GetValueType(bool is_right) const override;
 

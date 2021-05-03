@@ -1,5 +1,7 @@
 #include "ssa.h"
 #include "constant.h"
+#include "idmanager.h"
+#include "lib/guard.h"
 #include "define/type.h"
 
 namespace RJIT::mid {
@@ -37,12 +39,7 @@ Instruction::Instruction(unsigned opcode, unsigned operand_nums,
 }
 
 
-void Instruction::SetParent(const BlockPtr& B) {
-  DBG_ASSERT(GetParent() == nullptr, "SetParent() instruction parent is not NULL");
-  _parent = B;
-}
-
-std::string Instruction::GetOpcodeAsString(unsigned int opcode) const {
+std::string Instruction::GetOpcodeAsString(unsigned int opcode) {
     switch (opcode) {
       // Terminators
       case Ret:    return "ret";
@@ -194,6 +191,206 @@ void BasicBlock::AddInstBefore(const SSAPtr &insertBefore, const SSAPtr &inst) {
   auto it = std::find(_insts.begin(), _insts.end(), insertBefore);
   DBG_ASSERT(it != _insts.end(), "Basic block don't has this instruction");
   _insts.insert(it, inst);
+}
+
+/* ---------------------------- Methods of dumping IR ------------------------------- */
+
+const char *xIndent = "  ";
+
+// indicate if is in expression
+int in_expr = 0;
+
+Guard InExpr() {
+  ++in_expr;
+  return Guard([] { --in_expr; });
+}
+
+// in_branch
+int in_branch = 0;
+
+Guard InBranch() {
+  ++in_branch;
+  return Guard([] { --in_branch; });
+}
+
+void DumpType(std::ostream &os, const TYPE::TypeInfoPtr &type) {
+  os << type->GetTypeId();
+}
+
+void DumpValue(std::ostream &os, IdManager &id_mgr, const SSAPtr &value) {
+  value->Dump(os, id_mgr);
+}
+
+void DumpValue(std::ostream &os, IdManager &id_mgr, const Use &operand) {
+  DumpValue(os, id_mgr, operand.get());
+}
+
+template <typename It>
+inline void DumpValue(std::ostream &os, IdManager &id_mgr, It begin, It end) {
+  for (auto it = begin; it != end; ++it) {
+    if (it != begin) os << ", ";
+    DumpValue(os, id_mgr, *it);
+  }
+}
+
+void PrintId(std::ostream &os, IdManager &id_mgr, const Value *value) {
+  os << "%" << id_mgr.GetId(value);
+}
+
+void PrintId(std::ostream &os, IdManager &id_mgr, const std::string &name) {
+  os << "%" << name;
+}
+
+inline void DumpWithType(std::ostream &os, IdManager &id_mgr, const SSAPtr &val) {
+  DumpType(os, val->type());
+  os << ' ';
+  DumpValue(os, id_mgr, val);
+}
+
+// print indent, id and assign
+// return true if in expression
+inline bool PrintPrefix(std::ostream &os, IdManager &id_mgr, const Value *val) {
+  if (!in_expr) os << xIndent;
+  PrintId(os, id_mgr, val);
+  if (!in_expr) os << " = ";
+  return in_expr;
+}
+
+inline bool PrintPrefix(std::ostream &os, IdManager &id_mgr, const std::string &name) {
+  if (!in_expr) os << xIndent;
+  PrintId(os, id_mgr, name);
+  if (!in_expr) os << " = ";
+  return in_expr;
+}
+
+void BinaryOperator::Dump(std::ostream &os, IdManager &id_mgr) const {
+  Instruction::Dump(os, id_mgr);
+}
+
+void BasicBlock::Dump(std::ostream &os, IdManager &id_mgr) const {
+  if (!_name.empty()){
+    if (in_branch) os << "%"; // add '%' if in branch instructions
+    os << _name;
+  } else {
+    PrintId(os, id_mgr, this);
+  }
+  if (in_expr) return;
+
+  os << ":";
+
+  // dump predecessors
+  if (!empty()) {
+    auto guard = InExpr();
+    os << " ; preds: ";
+    DumpValue(os, id_mgr, begin(), end());
+  }
+  os << std::endl;
+  // dump each statements
+  for (const auto &it : _insts) DumpValue(os, id_mgr, it);
+}
+
+void Function::Dump(std::ostream &os, IdManager &id_mgr) const {
+  id_mgr.Reset();
+  id_mgr.RecordName(this, _function_name);
+  os << "define " ;
+
+  // dump ret type
+  auto func_type = type();
+  DumpType(os, func_type->GetReturnType());
+
+  // dump function name
+  os << " @" << _function_name;
+
+  // dump args
+  os << "(";
+  if (!_args.empty()) {
+    auto args_type = func_type->GetArgsType();
+    auto args_typevalues = args_type.value();
+    for (std::size_t i = 0; i < _args.size(); i++) {
+      DumpType(os, args_typevalues[i]);
+      os << " ";  // span between type and name
+      _args[i]->Dump(os, id_mgr);
+
+      // separate each parameters
+      if (i != _args.size() - 1) os << ", ";
+    }
+  }
+  os << ") {\n";
+
+  // dump content of blocks
+  std::size_t idx = 0;
+  for (const auto &it : *this) {
+    DumpValue(os, id_mgr, it);
+    // end of block
+    os << "\n";
+    if (idx++ != size() - 1) os << std::endl;
+  }
+
+  // end of function
+  os << "}\n" << std::endl;
+}
+
+void JumpInst::Dump(std::ostream &os, IdManager &id_mgr) const {
+  auto eguard = InExpr();
+  auto bguard = InBranch();
+  os << xIndent << "br label ";
+  DumpValue(os, id_mgr, target());
+}
+
+void StoreInst::Dump(std::ostream &os, IdManager &id_mgr) const {
+  auto guard = InExpr();
+  os << xIndent << "store ";
+  DumpWithType(os, id_mgr, value());
+  os << ", ";
+  DumpWithType(os, id_mgr, pointer());
+  os << std::endl;
+}
+
+void AllocaInst::Dump(std::ostream &os, IdManager &id_mgr) const {
+  bool ret;
+  if (_name.empty()) {
+    ret = PrintPrefix(os, id_mgr, this);
+  } else {
+    ret = PrintPrefix(os, id_mgr, _name);
+  }
+
+  if (ret) return;
+
+  auto guard = InExpr();
+  os << "alloca ";
+  DumpType(os, type()->GetDereferenceType());
+  os << std::endl;
+}
+
+void LoadInst::Dump(std::ostream &os, IdManager &id_mgr) const {
+  if (PrintPrefix(os, id_mgr, this)) return;
+  auto guard = InExpr();
+  os << "load ";
+  DumpType(os, type());
+  os << ", ";
+  DumpWithType(os, id_mgr, Pointer());
+  os << std::endl;
+}
+
+void ArgRefSSA::Dump(std::ostream &os, IdManager &id_mgr) const {
+  os << _arg_name;
+}
+
+void ReturnInst::Dump(std::ostream &os, IdManager &id_mgr) const {
+  auto guard = InExpr();
+  os << xIndent << "ret ";
+  if (!RetVal()) os << "void";
+  else DumpWithType(os, id_mgr, RetVal());
+  os << std::endl;
+}
+
+void ConstantInt::Dump(std::ostream &os, IdManager &id_mgr) const {
+
+}
+
+
+void ConstantString::Dump(std::ostream &os, IdManager &id_mgr) const {
+
 }
 
 }

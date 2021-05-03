@@ -1,11 +1,15 @@
 #ifndef RJIT_VALUE_H
 #define RJIT_VALUE_H
 
-#include "mid/ir/usedef/use.h"
+#include <ostream>
+
 #include "define/type.h"
 #include "front/logger.h"
+#include "mid/ir/usedef/use.h"
 
 namespace RJIT::mid {
+
+class IdManager;
 
 class Constant;
 class Argument;
@@ -29,9 +33,10 @@ using GlobalVarPtr  = std::shared_ptr<GlobalVariable>;
 
 class Value {
 private:
-  UseList           _use_list;
-  front::LoggerPtr  _logger;
   TYPE::TypeInfoPtr _type;
+  front::LoggerPtr  _logger;
+  BlockPtr          _parent;  // block
+  UseList           _use_list;
 
 public:
   Value() = default;
@@ -45,7 +50,11 @@ public:
 
   void set_type(const TYPE::TypeInfoPtr &type) { _type = type; }
 
-  virtual BlockPtr GetParent() { return nullptr; }
+  virtual const BlockPtr &GetParent() const { return _parent; }
+  virtual void SetParent(const BlockPtr &BB) { _parent = BB; }
+
+  // dump the content of SSA value to output stream
+  virtual void Dump(std::ostream &os, IdManager &id_mgr) const = 0;
 
   const UseList &uses() const { return _use_list; }
   const front::LoggerPtr &logger() const { return _logger; }

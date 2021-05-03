@@ -1,5 +1,6 @@
 #include <memory>
 #include "module.h"
+#include "idmanager.h"
 
 namespace RJIT::mid {
 
@@ -12,6 +13,20 @@ void Module::reset() {
 Guard Module::NewEnv() {
   _value_symtab = lib::MakeNestedMap(_value_symtab);
   return Guard([this] { _value_symtab = _value_symtab->outer(); });
+}
+
+void Module::Dump(std::ostream &os) {
+  IdManager id_mgr;
+
+  // dump global value
+  for (const auto &it : _global_vars) {
+    it->Dump(os, id_mgr);
+  }
+
+  // dump functions
+  for (const auto &it : _functions) {
+    it->Dump(os, id_mgr);
+  }
 }
 
 Guard Module::SetContext(const front::Logger &logger) {
@@ -72,13 +87,13 @@ SSAPtr Module::CreateStore(const SSAPtr &V, const SSAPtr &P) {
   return store;
 }
 
-SSAPtr Module::CreateArgRef(const SSAPtr &func, std::size_t index) {
+SSAPtr Module::CreateArgRef(const SSAPtr &func, std::size_t index, const std::string &arg_name) {
   // checking
   auto args_type = *func->type()->GetArgsType();
   DBG_ASSERT(index < args_type.size(), "index out of range");
 
   // set arg type
-  auto arg_ref = MakeSSA<ArgRefSSA>(func, index);
+  auto arg_ref = MakeSSA<ArgRefSSA>(func, index, arg_name);
   arg_ref->set_type(args_type[index]);
 
   // update function

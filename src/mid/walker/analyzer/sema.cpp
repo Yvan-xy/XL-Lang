@@ -296,11 +296,11 @@ namespace RJIT::mid::analyzer {
 
     if (_in_func) {
       // check if is conflicted
-      if (_symbol->GetItem(node->getIdentifier(), false)) {
+      if (_symbol->GetItem(node->ArgName(), false)) {
         info = "argument has already been declared";
-        return LogError(node->Logger(), info, node->getIdentifier());
+        return LogError(node->Logger(), info, node->ArgName());
       }
-      _symbol->AddItem(node->getIdentifier(), type);
+      _symbol->AddItem(node->ArgName(), type);
     }
 
     type = MakePrimType(type->GetType(), true);

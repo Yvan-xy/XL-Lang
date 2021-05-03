@@ -188,15 +188,31 @@ std::string type2String(Type type) {
 }
 
 std::string PrimType::GetTypeId() const {
-  return type2String(this->type_);
+  switch (_type) {
+    case Type::Void:
+      return "void";
+    case Type::Bool:
+    case Type::Int8:
+      return "i8";
+    case Type::Int32:
+      return "i32";
+    case Type::UInt8:
+      return "u8";
+    case Type::UInt32:
+      return "u32";
+    case Type::String:
+      return "i8";
+    case Type::Dam:
+      return "";
+  }
 }
 
 TypeInfoPtr PrimType::GetValueType(bool is_right) const {
-  return std::make_shared<PrimType>(type_, is_right);
+  return std::make_shared<PrimType>(_type, is_right);
 }
 
 std::size_t PrimType::GetSize() const {
-  switch (type_) {
+  switch (_type) {
     case Type::Bool:
     case Type::Int8:
     case Type::UInt8:
@@ -258,6 +274,13 @@ bool FuncType::operator==(const TypeInfoPtr &typeInfo) {
 
 TypeInfoPtr PointerType::GetValueType(bool is_right) const {
   return std::make_shared<PointerType>(_base, is_right);
+}
+
+std::string PointerType::GetTypeId() const {
+  std::ostringstream oss;
+  oss << _base->GetTypeId();
+  oss << "*";
+  return oss.str();
 }
 
 }

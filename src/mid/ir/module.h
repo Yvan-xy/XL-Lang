@@ -36,6 +36,7 @@ private:
   auto MakeSSA(Args &&... args) {
     static_assert(std::is_base_of_v<Value, T>);
     auto ssa = std::make_shared<T>(std::forward<Args>(args)...);
+    ssa->SetParent(_insert_point);
     ssa->set_logger(_loggers.top());
     return ssa;
   }
@@ -56,6 +57,9 @@ public:
   // new value env
   Guard NewEnv();
 
+  // dump ir
+  void Dump(std::ostream &os);
+
   FuncPtr  CreateFunction(const std::string &name, const TYPE::TypeInfoPtr &type);
 
   BlockPtr CreateBlock(const UserPtr &parent);
@@ -66,7 +70,7 @@ public:
 
   SSAPtr   CreateStore(const SSAPtr &V, const SSAPtr &P);
 
-  SSAPtr   CreateArgRef(const SSAPtr &func, std::size_t index);
+  SSAPtr   CreateArgRef(const SSAPtr &func, std::size_t index, const std::string &arg_name);
 
   SSAPtr   CreateAlloca(const TYPE::TypeInfoPtr &type);
 

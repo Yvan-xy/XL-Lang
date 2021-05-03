@@ -99,27 +99,23 @@ SSAPtr IRBuilder::visit(ProtoTypeAST *node) {
   _module.SetInsertPoint(entry);
   std::size_t index = 0;
   for (const auto &it : node->getArgs()) {
+    auto arg_name = it->ArgName();
     auto param_alloc = it->CodeGeneAction(this);
-    auto arg_ref = _module.CreateArgRef(func, index++);
+    // set param_name
+    std::static_pointer_cast<AllocaInst>(param_alloc)->set_name(arg_name + ".addr");
+    auto arg_ref = _module.CreateArgRef(func, index++, arg_name);
     _module.CreateStore(arg_ref, param_alloc);
   }
 
   // create func_exit block to init the return value
   auto ret_type = func_type->GetReturnType();
   auto ret_val = (ret_type->IsVoid()) ? nullptr : _module.CreateAlloca(ret_type);
+  if (ret_val) std::static_pointer_cast<AllocaInst>(ret_val)->set_name("retval");
   _module.SetRetValue(ret_val);
 
   // jump to exit
   auto func_exit = _module.CreateBlock(func, "func_exit");
   _module.SetFuncExit(func_exit);
-  _module.CreateJump(func_exit);
-  _module.SetInsertPoint(func_exit);
-  if (ret_val) {
-    auto ret = _module.CreateLoad(ret_val);
-    _module.CreateReturn(ret);
-  } else {
-    _module.CreateReturn(nullptr);
-  }
   return nullptr;
 }
 
@@ -135,11 +131,30 @@ SSAPtr IRBuilder::visit(FunctionDefAST *node) {
   // generate body
   auto body = node->getBody()->CodeGeneAction(this);
 
+  auto func_exit = _module.FuncExit();
+  _module.CreateJump(func_exit);
+  _module.SetInsertPoint(func_exit);
+
+  // create return value
+  if (auto ret_val = _module.ReturnValue()) {
+    auto ret = _module.CreateLoad(ret_val);
+    _module.CreateReturn(ret);
+  } else {
+    _module.CreateReturn(nullptr);
+  }
   return nullptr;
 }
 
 SSAPtr IRBuilder::visit(FuncParamAST *node) {
-  return nullptr;
+  auto cxt = _module.SetContext(node->Logger());
+  DBG_ASSERT(_in_func, "create parameter should in function");
+
+  // create alloca
+  auto param = _module.CreateAlloca(node->AstType());
+
+  // add param to symtab
+  _module.ValueSymTab()->AddItem(node->ArgName(), param);
+  return param;
 }
 
 SSAPtr IRBuilder::visit(PrimTypeAST *node) {

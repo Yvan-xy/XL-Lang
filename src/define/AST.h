@@ -68,6 +68,8 @@ public:
 
   virtual SSAPtr CodeGeneAction(mid::IRBuilder *irbuilder) = 0;
 
+  virtual std::string ArgName() const { return ""; }
+
   const TypeInfoPtr &AstType() const { return ast_type; }
 };
 
@@ -450,17 +452,17 @@ public:
 class FuncParamAST : public BaseAST {
 private:
   ASTPtr type;
-  std::string identifier;
+  std::string _arg_name;
 
 public:
   FuncParamAST(ASTPtr type_, std::string id)
-      : type(std::move(type_)), identifier(std::move(id)) {}
+      : type(std::move(type_)), _arg_name(std::move(id)) {}
 
   std::string getTypeStr() override { return type->getTypeStr(); }
 
   ASTPtr &getType() { return type; }
 
-  const std::string &getIdentifier() const { return identifier; }
+  std::string ArgName() const override { return _arg_name; }
 
   void Dump(mid::Dumper *) override;
 

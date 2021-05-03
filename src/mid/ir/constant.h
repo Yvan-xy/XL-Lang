@@ -14,6 +14,9 @@ private:
 public:
   explicit ConstantInt(unsigned int value) : _value(value) {}
 
+  // dump ir
+  void Dump(std::ostream &os, IdManager &id_mgr) const override;
+
   unsigned int value() const { return _value; }
 
   bool IsZero() const { return _value == 0; }
@@ -26,6 +29,9 @@ private:
 
 public:
   ConstantString(const std::string &str) : _str(str) {}
+
+  // dump ir
+  void Dump(std::ostream &os, IdManager &id_mgr) const override;
 
   const std::string &value() const { return _str; }
 };

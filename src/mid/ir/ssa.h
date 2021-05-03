@@ -18,6 +18,9 @@ public:
   BasicBlock(UserPtr parent, std::string name)
       : _name(std::move(name)), _parent(std::move(parent)) {}
 
+  // dump ir
+  void Dump(std::ostream &os, IdManager &id_mgr) const override;
+
   void set_parent(const UserPtr &parent) { _parent = parent; }
 
   void AddInstToEnd(const SSAPtr &inst) { _insts.emplace_back(inst); }
@@ -37,14 +40,12 @@ public:
 class Instruction : public User {
 private:
   unsigned _opcode;
-  BlockPtr _parent;
   InstPtr _prev, _next;
 
   void SetPrev(InstPtr P) { _prev = std::move(P); }
 
   void SetNext(InstPtr N) { _next = std::move(N); }
 
-  void SetParent(const BlockPtr &B);
 
   // getNext/Prev - Return the next or previous instruction in the list.  The
   // last node in the list is a terminator instruction.
@@ -71,19 +72,16 @@ public:
 
   virtual ~Instruction() = default;
 
+  void Dump(std::ostream &os, IdManager &id_mgr) const override {}
+
   // Accessor methods...
-  //
-  BlockPtr GetParent() override { return _parent; }
-
-  const BlockPtr &GetParent() const { return _parent; }
-
   unsigned opcode() const { return _opcode; }
 
   std::string GetOpcodeAsString() const {
     return GetOpcodeAsString(opcode());
   }
 
-  std::string GetOpcodeAsString(unsigned opcode) const;
+  static std::string GetOpcodeAsString(unsigned opcode) ;
 
   // Determine if the opcode is one of the terminators instruction.
   static inline bool isTerminator(unsigned OpCode) {
@@ -141,6 +139,8 @@ public:
 // block.  Thus, these are all the flow control type of operations.
 //
 class TerminatorInst : public Instruction {
+private:
+  std::vector<BlockPtr> _successors;
 public:
   TerminatorInst(Instruction::TermOps opcode,
                  unsigned operands_num, const SSAPtr &insertBefore = nullptr)
@@ -158,13 +158,20 @@ public:
                  unsigned operands_num, const BlockPtr &insertAtEnd)
       : Instruction(opcode, operands_num, operands, insertAtEnd) {}
 
+  // dump ir
+  void Dump(std::ostream &os, IdManager &id_mgr) const override {}
+
+  // get all successors
+  const std::vector<BlockPtr> &GetSuccessors() const { return _successors; }
+
   /* Virtual methods - Terminators should overload these methods. */
 
   // Return the number of successors that this terminator has.
   virtual unsigned GetSuccessorNum() const = 0;
 
   virtual SSAPtr GetSuccessor(unsigned idx) const = 0;
-  virtual void SetSuccessor(unsigned idx, const BlockPtr &B) = 0;
+  virtual void SetSuccessor(unsigned idx, const BlockPtr &BB) = 0;
+  virtual void AddSuccessor(const BlockPtr &BB) { _successors.push_back(BB); }
 };
 
 //===----------------------------------------------------------------------===//
@@ -198,6 +205,9 @@ public:
 
   BinaryOperator(BinaryOps opcode, const SSAPtr &S1,
                  const SSAPtr &S2, const TYPE::TypeInfoPtr &type, const BlockPtr &IAE);
+
+  // dump ir
+  void Dump(std::ostream &os, IdManager &id_mgr) const override;
 
   static unsigned GetNumOperands() { return 2; }
 
@@ -256,6 +266,9 @@ private:
 public:
   explicit Function(std::string name) : _function_name(std::move(name)) {}
 
+  // dump ir
+  void Dump(std::ostream &os, IdManager &id_mgr) const override;
+
   // setters
   void set_arg(std::size_t i, const SSAPtr &arg) {
     _args.resize(i + 1);
@@ -275,6 +288,10 @@ public:
     AddValue(target);
   }
 
+  // dump ir
+  void Dump(std::ostream &os, IdManager &id_mgr) const override;
+
+  // virtual functions of TerminatorInst
   unsigned GetSuccessorNum() const override { return 1; }
 
   SSAPtr GetSuccessor(unsigned idx) const override {
@@ -290,6 +307,39 @@ public:
   const SSAPtr &target() const { return (*this)[0].get(); }
 };
 
+
+// return from function
+// operand: value
+class ReturnInst : public TerminatorInst {
+public:
+  explicit ReturnInst(const SSAPtr &value, const SSAPtr &IB = nullptr)
+      : TerminatorInst(Instruction::TermOps::Ret,1, IB)
+  { AddValue(value); }
+
+  // dump ir
+  void Dump(std::ostream &os, IdManager &id_mgr) const override;
+
+  // virtual functions of TerminatorInst
+  unsigned GetSuccessorNum() const override { return 1; }
+
+  SSAPtr GetSuccessor(unsigned idx) const override {
+    DBG_ASSERT(idx == 0, "index out of range");
+    auto succs = GetSuccessors();
+    DBG_ASSERT(succs.size() == 1, "successors size error");
+    return succs[idx];
+  };
+
+  void SetSuccessor(unsigned idx, const BlockPtr &BB) override {
+    DBG_ASSERT(idx == 0, "index out of range");
+    auto succs = GetSuccessors();
+    succs[idx] = BB;
+  }
+
+  // getter/setter
+  const SSAPtr &RetVal()    const { return (*this)[0].get(); }
+  void SetRetVal(const SSAPtr &value) { (*this)[0].set(value); }
+};
+
 // store to alloc
 // operands: value, pointer
 class StoreInst : public Instruction {
@@ -300,6 +350,9 @@ public:
     AddValue(P);
   }
 
+  // dump ir
+  void Dump(std::ostream &os, IdManager &id_mgr) const override;
+
   // getters
   const SSAPtr &value() const { return (*this)[0].get(); }
 
@@ -307,9 +360,23 @@ public:
 };
 
 // alloc on stack
-class AllocaInst : public User {
+class AllocaInst : public Instruction {
+private:
+  std::string _name;
 public:
-  AllocaInst() = default;
+  AllocaInst(const SSAPtr &IB = nullptr)
+    : Instruction(Instruction::MemoryOps::Alloca, 0, IB),
+      _name(std::string("")) {}
+
+  explicit AllocaInst(const std::string &name, const SSAPtr &IB = nullptr)
+    : Instruction(Instruction::MemoryOps::Alloca, 0, IB),
+    _name(name) {}
+
+  // dump ir
+  void Dump(std::ostream &os, IdManager &id_mgr) const override;
+
+  const std::string &name() const { return _name; }
+  void set_name(const std::string &name) { _name = name; }
 };
 
 // load from pointer
@@ -319,6 +386,9 @@ public:
     : Instruction(Instruction::MemoryOps::Load, 1, IB) {
     AddValue(ptr);
   }
+
+  // dump ir
+  void Dump(std::ostream &os, IdManager &id_mgr) const override;
 
   // getter/setter
   void SetPointer(const SSAPtr &ptr)    { (*this)[0].set(ptr); }
@@ -331,26 +401,21 @@ class ArgRefSSA : public Value {
 private:
   SSAPtr      _func;
   std::size_t _index;
+  std::string _arg_name;
 
 public:
-  ArgRefSSA(const SSAPtr &func, std::size_t index)
-    : _func(func), _index(index) {}
+  ArgRefSSA(const SSAPtr &func, std::size_t index, std::string name)
+    : _func(func), _index(index), _arg_name(std::move(name)) {}
+
+  // dump ir
+  void Dump(std::ostream &os, IdManager &id_mgr) const override;
 
   // getter
-  const SSAPtr &func()  const { return _func;  }
-  std::size_t   index() const { return _index; }
+  const SSAPtr      &func()    const { return _func;  }
+  std::size_t       index()    const { return _index; }
+  const std::string arg_name() const { return _arg_name; }
 };
 
-// return from function
-// operand: value
-class ReturnInst : public User {
-public:
-  explicit ReturnInst(const SSAPtr &value) { AddValue(value); }
-
-  // getter/setter
-  const SSAPtr &RetVal()    const { return (*this)[0].get(); }
-  void SetRetVal(const SSAPtr &value) { (*this)[0].set(value); }
-};
 
 }
 #endif //RJIT_SSA_H

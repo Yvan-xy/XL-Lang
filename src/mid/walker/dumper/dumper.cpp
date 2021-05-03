@@ -125,7 +125,7 @@ namespace RJIT::mid {
   }
 
   void Dumper::visit(FuncParamAST *node) {
-    os << "\"" << node->getIdentifier() << "\" : "
+    os << "\"" << node->ArgName() << "\" : "
        << node->getTypeStr();
   }
 

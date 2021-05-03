@@ -25,6 +25,7 @@ int main(int argc, char *argv[]) {
   IRBuilder irBuilder(parser.ast());
 
   irBuilder.EmitIR();
+  irBuilder.module().Dump(std::cout);
 
 //
 //    RJIT::lib::Nested::NestedMapPtr<int, int *> ptr = MakeNestedMap<int, int *>();
