@@ -73,6 +73,20 @@
 #define LAST_OTHER_INST(num)
 #endif
 
+#ifndef FIRST_ASSIGN_INST
+#define FIRST_ASSIGN_INST(num)
+#endif
+#ifndef HANDLE_ASSIGN_INST
+#ifndef HANDLE_INST
+#define HANDLE_ASSIGN_INST(num, opcode, Class)
+#else
+#define HANDLE_ASSIGN_INST(num, opcode, Class) HANDLE_INST(num, opcode, Class)
+#endif
+#endif
+#ifndef LAST_ASSIGN_INST
+#define LAST_ASSIGN_INST(num)
+#endif
+
 // Terminator Instructions - These instructions are used to terminate a basic
 // block of the program.   Every basic block must end with one of these
 // instructions for it to be a well formed basic block.
@@ -137,7 +151,26 @@ HANDLE_OTHER_INST(34, VAArg  , VAArgInst  )  // vaarg instruction
 HANDLE_OTHER_INST(35, ExtractElement, ExtractElementInst)// extract from vector.
 HANDLE_OTHER_INST(36, InsertElement, InsertElementInst)  // insert into vector
 HANDLE_OTHER_INST(37, ShuffleVector, ShuffleVectorInst)  // shuffle two vectors.
-  LAST_OTHER_INST(37)
+HANDLE_OTHER_INST(38, Undef,   Undef)   // Assign with other operator
+  LAST_OTHER_INST(38)
+
+ FIRST_ASSIGN_INST(38)
+HANDLE_ASSIGN_INST(38, Assign,  BinaryOperator)   // load and store
+HANDLE_ASSIGN_INST(39, AssAdd,  BinaryOperator)   // Assign with add operator
+HANDLE_ASSIGN_INST(40, AssSub,  BinaryOperator)   // Assign with sub operator
+HANDLE_ASSIGN_INST(41, AssMul,  BinaryOperator)   // Assign with mul operator
+HANDLE_ASSIGN_INST(42, AssSDiv, BinaryOperator)   // Assign with sdiv operator
+HANDLE_ASSIGN_INST(43, AssUDiv, BinaryOperator)   // Assign with udiv operator
+HANDLE_ASSIGN_INST(44, AssSRem, BinaryOperator)   // Assign with srem operator
+HANDLE_ASSIGN_INST(45, AssURem, BinaryOperator)   // Assign with urem operator
+HANDLE_ASSIGN_INST(46, AssAnd,  BinaryOperator)   // Assign with and operator
+HANDLE_ASSIGN_INST(47, AssOr,   BinaryOperator)   // Assign with or operator
+HANDLE_ASSIGN_INST(48, AssXor,  BinaryOperator)   // Assign with xor operator
+HANDLE_ASSIGN_INST(49, AssShl,  BinaryOperator)   // Assign with shl operator
+HANDLE_ASSIGN_INST(50, AssAShr, BinaryOperator)   // Assign with ashr operator
+HANDLE_ASSIGN_INST(51, AssLShr, BinaryOperator)   // Assign with lshr operator
+  LAST_ASSIGN_INST(51)
+
 
 #undef  FIRST_TERM_INST
 #undef HANDLE_TERM_INST
@@ -158,6 +191,10 @@ HANDLE_OTHER_INST(37, ShuffleVector, ShuffleVectorInst)  // shuffle two vectors.
 #undef  FIRST_OTHER_INST
 #undef HANDLE_OTHER_INST
 #undef   LAST_OTHER_INST
+
+#undef  FIRST_ASSIGN_INST
+#undef HANDLE_ASSIGN_INST
+#undef   LAST_ASSIGN_INST
 
 #ifdef HANDLE_INST
 #undef HANDLE_INST

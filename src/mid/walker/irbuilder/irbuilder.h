@@ -1,6 +1,7 @@
 #ifndef RJIT_IRBUILDER_H
 #define RJIT_IRBUILDER_H
 
+#include "mid/ir/ssa.h"
 #include "mid/ir/module.h"
 #include "mid/ir/usedef/value.h"
 #include "mid/visitor/visitor.h"

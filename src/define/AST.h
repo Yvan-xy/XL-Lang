@@ -30,19 +30,29 @@ enum class Operator {
   Not, Neg, LNot,
 
   // arithmetic
-  Add, Sub, Mul, Div, Mod, And, Or, Xor, Shl, Shr,
+  Add, Sub, Mul, SDiv, UDiv, SRem, URem, And, Or, Xor, Shl, AShr, LShr,
 
   // logical
   LAnd, LOr, Equal, NotEqual, Less, LessEq, Great, GreatEq,
 
   // assign with arithmetic
-  Assign, AssAdd, AssSub, AssMul, AssDiv, AssMod, AssAnd, AssOr, AssXor, AssShl, AssShr,
+  Assign, AssAdd, AssSub, AssMul, AssSDiv, AssUDiv, AssSRem, AssURem,
+  AssAnd, AssOr, AssXor, AssShl, AssAShr, AssLShr,
   Dam
 };
 
 Operator string2Operator(const std::string &op, bool isUnary = false);
 
 std::string operator2String(Operator oper);
+
+class BaseAST;
+class Decl;
+class Stmt;
+
+typedef std::unique_ptr<BaseAST> ASTPtr;
+typedef std::vector<ASTPtr> ASTPtrList;
+typedef std::unique_ptr<Decl> DeclPtr;
+typedef std::unique_ptr<Stmt> StmtPtr;
 
 class BaseAST {
 private:
@@ -70,6 +80,10 @@ public:
 
   virtual std::string ArgName() const { return ""; }
 
+  virtual bool hasInit() { return false; }
+
+  virtual BaseAST* getInitValue() { return nullptr; }
+
   const TypeInfoPtr &AstType() const { return ast_type; }
 };
 
@@ -78,11 +92,6 @@ class Stmt : public BaseAST {
 
 class Decl : public BaseAST {
 };
-
-typedef std::unique_ptr<BaseAST> ASTPtr;
-typedef std::vector<ASTPtr> ASTPtrList;
-typedef std::unique_ptr<Decl> DeclPtr;
-typedef std::unique_ptr<Stmt> StmtPtr;
 
 class TranslationUnitDecl : public Decl {
 private:
@@ -219,16 +228,14 @@ public:
 
   const std::string &getIdentifier() { return identifier; }
 
-  bool hasInit() {
+  bool hasInit() override {
     if (initValue) {
       return true;
     }
     return false;
   }
 
-  ASTPtr &getInitValue() {
-    return initValue;
-  }
+  BaseAST *getInitValue() override {return initValue.get(); }
 
   void setType(RJIT::TYPE::Type _type) { _type = type; }
 
@@ -242,22 +249,23 @@ public:
 // Binary statement
 class BinaryStmt : public Stmt {
 private:
-  std::string op_str;
-  Operator op;
+  std::string _op_str;
+  Operator _op;
   ASTPtr LHS, RHS;
 
 public:
-  BinaryStmt(Operator op_, ASTPtr lhs, ASTPtr rhs) : op(op_), LHS(std::move(lhs)), RHS(std::move(rhs)) {
-    op_str = operator2String(op);
+  BinaryStmt(Operator op_, ASTPtr lhs, ASTPtr rhs) : _op(op_), LHS(std::move(lhs)), RHS(std::move(rhs)) {
+    _op_str = operator2String(_op);
   }
 
   ASTPtr &getLHS() { return LHS; }
 
   ASTPtr &getRHS() { return RHS; }
 
-  const std::string &getOpStr() const { return op_str; }
+  const std::string &getOpStr() const { return _op_str; }
 
-  Operator getOp() const { return op; }
+  Operator getOp() const { return _op; }
+  void setOp(Operator op) { _op = op; }
 
   void Dump(mid::Dumper *) override;
 
@@ -328,17 +336,19 @@ public:
 // if-else statement
 class IfElseStmt : public Stmt {
 private:
-  ASTPtr condition, then_, else_;
+  ASTPtr _condition;
+  ASTPtr _then;
+  ASTPtr _else;
 
 public:
   IfElseStmt(ASTPtr cond, ASTPtr then, ASTPtr _else)
-      : condition(std::move(cond)), then_(std::move(then)), else_(std::move(_else)) {}
+      : _condition(std::move(cond)), _then(std::move(then)), _else(std::move(_else)) {}
 
-  ASTPtr &getCondition() { return condition; }
+  ASTPtr &getCondition() { return _condition; }
 
-  ASTPtr &getThen() { return then_; }
+  ASTPtr &getThen() { return _then; }
 
-  ASTPtr &getElse() { return else_; }
+  ASTPtr &getElse() { return _else; }
 
   void Dump(mid::Dumper *) override;
 

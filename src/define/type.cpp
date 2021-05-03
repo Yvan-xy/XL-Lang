@@ -16,9 +16,9 @@ Operator string2Operator(const std::string &op, bool isUnary) {
   } else if (op == "*") {
     return Operator::Mul;
   } else if (op == "/") {
-    return Operator::Div;
+    return Operator::SDiv;
   } else if (op == "%") {
-    return Operator::Mod;
+    return Operator::SRem;
   } else if (op == "&") {
     return Operator::And;
   } else if (op == "|") {
@@ -26,7 +26,7 @@ Operator string2Operator(const std::string &op, bool isUnary) {
   } else if (op == "^") {
     return Operator::Xor;
   } else if (op == ">>") {
-    return Operator::Shr;
+    return Operator::AShr;
   } else if (op == "<<") {
     return Operator::Shl;
   } else if (op == "&&") {
@@ -54,9 +54,9 @@ Operator string2Operator(const std::string &op, bool isUnary) {
   } else if (op == "*=") {
     return Operator::AssMul;
   } else if (op == "%=") {
-    return Operator::AssMod;
+    return Operator::AssSRem;
   } else if (op == "/=") {
-    return Operator::AssDiv;
+    return Operator::AssSDiv;
   } else if (op == "&=") {
     return Operator::AssAnd;
   } else if (op == "|=") {
@@ -66,7 +66,7 @@ Operator string2Operator(const std::string &op, bool isUnary) {
   } else if (op == "<<=") {
     return Operator::AssShl;
   } else if (op == ">>=") {
-    return Operator::AssShr;
+    return Operator::AssAShr;
   }
   return Operator::Dam;
 }
@@ -85,9 +85,11 @@ std::string operator2String(Operator oper) {
       return "-";
     case Operator::Mul:
       return "*";
-    case Operator::Div:
+    case Operator::SDiv:
+    case Operator::UDiv:
       return "/";
-    case Operator::Mod:
+    case Operator::SRem:
+    case Operator::URem:
       return "%";
     case Operator::And:
       return "&";
@@ -97,7 +99,8 @@ std::string operator2String(Operator oper) {
       return "^";
     case Operator::Shl:
       return "<<";
-    case Operator::Shr:
+    case Operator::AShr:
+    case Operator::LShr:
       return ">>";
     case Operator::LAnd:
       return "&&";
@@ -123,9 +126,11 @@ std::string operator2String(Operator oper) {
       return "-=";
     case Operator::AssMul:
       return "*=";
-    case Operator::AssDiv:
+    case Operator::AssSDiv:
+    case Operator::AssUDiv:
       return "/=";
-    case Operator::AssMod:
+    case Operator::AssSRem:
+    case Operator::AssURem:
       return "%=";
     case Operator::AssAnd:
       return "&=";
@@ -135,7 +140,8 @@ std::string operator2String(Operator oper) {
       return "^=";
     case Operator::AssShl:
       return "<<=";
-    case Operator::AssShr:
+    case Operator::AssAShr:
+    case Operator::AssLShr:
       return ">>=";
     case Operator::Dam:
       return "";

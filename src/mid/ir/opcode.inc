@@ -32,3 +32,10 @@ enum OtherOps {
 #define   LAST_OTHER_INST(N)             OtherOpsEnd = N+1
 #include "instruction.inc"
 };
+
+enum AssignOps {
+#define  FIRST_ASSIGN_INST(N)             AssignOpsBegin = N,
+#define HANDLE_ASSIGN_INST(N, OPC, CLASS) OPC = N,
+#define   LAST_ASSIGN_INST(N)             AssignOpsEnd = N+1
+#include "instruction.inc"
+};

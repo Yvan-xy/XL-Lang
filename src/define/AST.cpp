@@ -43,7 +43,6 @@ void VariableDefAST::Dump(Dumper *dumper) {
 
 void BinaryStmt::Dump(Dumper *dumper) {
   dumper->visit(this);
-
 }
 
 void UnaryStmt::Dump(Dumper *dumper) {

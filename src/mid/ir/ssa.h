@@ -32,9 +32,9 @@ public:
 
   const UserPtr &parent() const { return _parent; }
 
-  auto inst_begin() const { return _insts.begin(); }
+  SSAPtrList::iterator inst_begin() { return _insts.begin(); }
 
-  auto inst_end() const { return _insts.end(); }
+  SSAPtrList::iterator inst_end() { return _insts.end(); }
 };
 
 class Instruction : public User {
@@ -338,6 +338,41 @@ public:
   // getter/setter
   const SSAPtr &RetVal()    const { return (*this)[0].get(); }
   void SetRetVal(const SSAPtr &value) { (*this)[0].set(value); }
+};
+
+// branch with condition
+// operands: cond true_block false_block
+class BranchInst : public TerminatorInst {
+public:
+  BranchInst(const SSAPtr &cond, const SSAPtr &true_block,
+             const SSAPtr &false_block, const SSAPtr &IB = nullptr);
+
+  // dump ir
+  void Dump(std::ostream &os, IdManager &id_mgr) const override;
+
+  // virtual functions of TerminatorInst
+  unsigned GetSuccessorNum() const override { return 3; }
+
+  SSAPtr GetSuccessor(unsigned idx) const override {
+    DBG_ASSERT(idx < 2, "index out of range");
+    auto succs = GetSuccessors();
+    DBG_ASSERT(succs.size() == 2, "successors size error");
+    return succs[idx];
+  };
+
+  void SetSuccessor(unsigned idx, const BlockPtr &BB) override {
+    DBG_ASSERT(idx < 2, "index out of range");
+    auto succs = GetSuccessors();
+    succs[idx] = BB;
+  }
+
+  // getter/setter
+  const SSAPtr &cond()        const       { return (*this)[0].get(); }
+  const SSAPtr &true_block()  const       { return (*this)[1].get(); }
+  const SSAPtr &false_block() const       { return (*this)[2].get(); }
+  void SetCond(const SSAPtr &value)       { (*this)[0].set(value);   }
+  void SetTrueBlock(const SSAPtr &value)  { (*this)[1].set(value);   }
+  void SetFalseBlock(const SSAPtr &value) { (*this)[2].set(value);   }
 };
 
 // store to alloc

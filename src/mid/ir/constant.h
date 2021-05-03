@@ -36,31 +36,9 @@ public:
   const std::string &value() const { return _str; }
 };
 
-SSAPtr GetZeroValue(TYPE::Type type) {
-  using TYPE::Type;
-  auto zero = std::make_shared<ConstantInt>(0);
-  switch (type) {
-    case Type::Void:
-      zero->set_type(TYPE::MakeVoid());
-      break;
-    case Type::Int8:
-      zero->set_type(TYPE::MakePrimType(Type::Int8, true));
-      break;
-    case Type::UInt8:
-      zero->set_type(TYPE::MakePrimType(Type::UInt8, true));
-      break;
-    case Type::Int32:
-      zero->set_type(TYPE::MakePrimType(Type::Int32, true));
-      break;
-    case Type::UInt32:
-      zero->set_type(TYPE::MakePrimType(Type::UInt32, true));
-      break;
-    default:
-      DBG_ASSERT(0, "Get error zero type");
-      break;
-  }
-  return zero;
-}
+SSAPtr GetZeroValue(TYPE::Type type);
+
+SSAPtr GetAllOneValue(TYPE::Type type);
 
 }
 

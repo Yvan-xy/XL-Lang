@@ -1,6 +1,8 @@
 #include <memory>
 #include "module.h"
+#include "constant.h"
 #include "idmanager.h"
+#include "define/AST.h"
 
 namespace RJIT::mid {
 
@@ -56,6 +58,10 @@ UserPtr Module::GetFunction(const std::string &func_name) {
   return nullptr;
 }
 
+SSAPtr Module::GetValues(const std::string &var_name) {
+  return _value_symtab->GetItem(var_name);
+}
+
 BlockPtr Module::CreateBlock(const UserPtr &parent) {
   return CreateBlock(parent, "");
 }
@@ -79,6 +85,29 @@ SSAPtr Module::CreateJump(const BlockPtr &target) {
   target->AddValue(std::static_pointer_cast<Value>(_insert_point));
   return jump;
 }
+
+// TODO: add necessary cast
+SSAPtr Module::CreateReturn(const SSAPtr &value) {
+  auto ret = AddInst<ReturnInst>(value);
+  ret->set_type(nullptr);
+  return ret;
+}
+
+SSAPtr Module::CreateBranch(const SSAPtr &cond, const BlockPtr &true_block,
+                            const BlockPtr &false_block) {
+  // check condition type
+  DBG_ASSERT(cond->type()->IsInteger(), "cond type should be integer");
+
+  // create branch instruction
+  auto br = AddInst<BranchInst>(cond, true_block, false_block);
+  br->set_type(nullptr);
+
+  // update predecessor
+  true_block->AddValue(_insert_point);
+  false_block->AddValue(_insert_point);
+  return br;
+}
+
 
 // TODO: add necessary cast before store
 SSAPtr Module::CreateStore(const SSAPtr &V, const SSAPtr &P) {
@@ -104,7 +133,8 @@ SSAPtr Module::CreateArgRef(const SSAPtr &func, std::size_t index, const std::st
 SSAPtr Module::CreateAlloca(const TYPE::TypeInfoPtr &type) {
   // set insert point to entry block
   auto insert_point = _insert_point;
-  SetInsertPoint(_func_entry);
+  auto last_pos = _func_entry->inst_end();
+  SetInsertPoint(_func_entry, --last_pos);
 
   // create alloca and insert it to entry
   DBG_ASSERT(!type->IsVoid(), "alloc type can't be void");
@@ -117,19 +147,137 @@ SSAPtr Module::CreateAlloca(const TYPE::TypeInfoPtr &type) {
   return alloca;
 }
 
-// TODO: add necessary cast
-SSAPtr Module::CreateReturn(const SSAPtr &value) {
-  auto ret = AddInst<ReturnInst>(value);
-  ret->set_type(nullptr);
-  return ret;
-}
-
 SSAPtr Module::CreateLoad(const SSAPtr &ptr) {
   auto type = ptr->type();
   DBG_ASSERT(type->IsPointer(), "loading from non-pointer type is forbidden");
   auto load = AddInst<LoadInst>(ptr);
   load->set_type(ptr->type()->GetDereferenceType());
   return load;
+}
+
+static unsigned OpToOpcode(AST::Operator op) {
+  using OtherOps  = Instruction::OtherOps;
+  using BinaryOps = Instruction::BinaryOps;
+  using AssignOps = Instruction::AssignOps;
+  switch (op) {
+    /* ----------- unary operator ------------ */
+    case AST::Operator::Not:    return BinaryOps::Xor;
+    case AST::Operator::Neg:    return BinaryOps::Sub;
+    case AST::Operator::LNot:   return BinaryOps::And;  // operand && 1
+
+    /* ----------- binary operator ------------ */
+    case AST::Operator::Add:      return BinaryOps::Add;
+    case AST::Operator::Sub:      return BinaryOps::Sub;
+    case AST::Operator::Mul:      return BinaryOps::Mul;
+    case AST::Operator::SDiv:     return BinaryOps::SDiv;
+    case AST::Operator::UDiv:     return BinaryOps::UDiv;
+    case AST::Operator::SRem:     return BinaryOps::SRem;
+    case AST::Operator::URem:     return BinaryOps::URem;
+    case AST::Operator::And:      return BinaryOps::And;
+    case AST::Operator::Or:       return BinaryOps::Or;
+    case AST::Operator::Xor:      return BinaryOps::Xor;
+    case AST::Operator::Shl:      return BinaryOps::Shl;
+    case AST::Operator::AShr:     return BinaryOps::AShr;
+    case AST::Operator::LShr:     return BinaryOps::LShr;
+    case AST::Operator::LAnd:     return BinaryOps::And;
+    case AST::Operator::LOr:      return BinaryOps::Or;
+
+    /* ----------- compare operator ------------ */
+    case AST::Operator::Equal:    return OtherOps::ICmp;
+    case AST::Operator::NotEqual: return OtherOps::ICmp;
+    case AST::Operator::Less:     return OtherOps::ICmp;
+    case AST::Operator::LessEq:   return OtherOps::ICmp;
+    case AST::Operator::Great:    return OtherOps::ICmp;
+    case AST::Operator::GreatEq:  return OtherOps::ICmp;
+
+    /* ----------- assign operator ------------ */
+    case AST::Operator::Assign:   return AssignOps::Assign;
+    case AST::Operator::AssAdd:   return AssignOps::AssAdd;
+    case AST::Operator::AssSub:   return AssignOps::AssSub;
+    case AST::Operator::AssMul:   return AssignOps::AssMul;
+    case AST::Operator::AssSDiv:  return AssignOps::AssSDiv;
+    case AST::Operator::AssUDiv:  return AssignOps::AssUDiv;
+    case AST::Operator::AssSRem:  return AssignOps::AssSRem;
+    case AST::Operator::AssURem:  return AssignOps::AssURem;
+    case AST::Operator::AssAnd:   return AssignOps::AssAnd;
+    case AST::Operator::AssOr:    return AssignOps::AssOr;
+    case AST::Operator::AssXor:   return AssignOps::AssXor;
+    case AST::Operator::AssShl:   return AssignOps::AssShl;
+    case AST::Operator::AssAShr:  return AssignOps::AssAShr;
+    case AST::Operator::AssLShr:  return AssignOps::AssLShr;
+    case AST::Operator::Dam:      return OtherOps::Undef;
+  }
+  return OtherOps::Undef;
+}
+
+// S1 = S2;
+SSAPtr Module::CreateAssign(const SSAPtr &S1, const SSAPtr &S2) {
+  if (S2->type()->IsConst()) {
+    // S1 = C ---> store C, s1
+    auto store_inst = AddInst<StoreInst>(S2, S1);
+    DBG_ASSERT(store_inst != nullptr, "emit store inst failed");
+    return store_inst;
+  } else {
+    // S1 = S2 ---> %0 = load s2; store %0, i32* s1
+    auto load_inst = AddInst<LoadInst>(S2);
+    auto store_inst = AddInst<StoreInst>(load_inst, S1);
+    DBG_ASSERT(store_inst != nullptr, "emit store inst failed");
+    return store_inst;
+  }
+}
+
+SSAPtr Module::CreatePureBinaryInst(Instruction::BinaryOps opcode,
+                                    const SSAPtr &S1, const SSAPtr &S2) {
+  DBG_ASSERT(opcode >= Instruction::BinaryOps::Add, "opcode is not pure binary operator");
+  std::shared_ptr<LoadInst> load_s1 = nullptr;
+  std::shared_ptr<LoadInst> load_s2 = nullptr;
+  if (!S1->type()->IsConst()) {
+    load_s1 = AddInst<LoadInst>(S1);
+    DBG_ASSERT(load_s1 != nullptr, "emit load S1 failed");
+  }
+
+  if (!S2->type()->IsConst()) {
+    load_s2 = AddInst<LoadInst>(S2);
+    DBG_ASSERT(load_s1 != nullptr, "emit load S2 failed");
+  }
+
+  auto bin_inst = BinaryOperator::Create(opcode,
+                                         ((load_s1 != nullptr) ? load_s1 : S1),
+                                         ((load_s2 != nullptr) ? load_s2 : S2));
+  DBG_ASSERT(bin_inst != nullptr, "emit binary instruction failed");
+  return bin_inst;
+}
+
+
+SSAPtr Module::CreateBinaryOperator(AST::Operator op,
+                                    const SSAPtr &S1, const SSAPtr &S2) {
+  using OtherOps  = Instruction::OtherOps;
+  using BinaryOps = Instruction::BinaryOps;
+  using AssignOps = Instruction::AssignOps;
+  auto opcode = OpToOpcode(op);
+
+  // create assign operator
+  if (opcode == AssignOps::Assign) {
+    return CreateAssign(S1, S2);
+  } else if (opcode >= AssignOps::AssAdd) {
+    auto bin_inst = CreatePureBinaryInst(static_cast<BinaryOps>(opcode), S1, S2);
+    auto assign_inst = CreateAssign(S1, bin_inst);
+  } else if (opcode == OtherOps::ICmp) {
+
+  } else if (opcode >= BinaryOps::And) {
+
+  }
+
+
+  return nullptr;
+}
+
+SSAPtr Module::CreateConstInt(unsigned int value) {
+  using namespace RJIT::TYPE;
+  auto const_int =  MakeSSA<ConstantInt>(value);
+  const_int->set_type(MakeConst(Type::UInt32));
+  DBG_ASSERT(const_int != nullptr, "emit const int value failed");
+  return const_int;
 }
 
 

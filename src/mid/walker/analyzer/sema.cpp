@@ -16,16 +16,16 @@ namespace RJIT::mid::analyzer {
 
   TypeInfoPtr SemAnalyzer::visit(IntAST *node) {
     // make right value 'int32' type
-    return node->set_ast_type(MakePrimType(Type::Int32, true));
+    return node->set_ast_type(MakeConst(Type::Int32, true));
   }
 
   TypeInfoPtr SemAnalyzer::visit(CharAST *node) {
     // make right value 'uint8' type as a char
-    return node->set_ast_type(MakePrimType(Type::UInt8, true));
+    return node->set_ast_type(MakeConst(Type::UInt8, true));
   }
 
   TypeInfoPtr SemAnalyzer::visit(StringAST *node) {
-    return node->set_ast_type(MakePrimType(Type::String, true));
+    return node->set_ast_type(MakeConst(Type::String, true));
   }
 
   TypeInfoPtr SemAnalyzer::visit(VariableAST *node) {
@@ -51,7 +51,7 @@ namespace RJIT::mid::analyzer {
       if (!i->SemAnalyze(this)) return nullptr;
     }
 
-    return node->set_ast_type(MakeVoid());
+    return node->set_ast_type(MakePrimType(node->getPrimeType(), false));
   }
 
   TypeInfoPtr SemAnalyzer::visit(VariableDefAST *node) {
@@ -85,6 +85,7 @@ namespace RJIT::mid::analyzer {
   }
 
   TypeInfoPtr SemAnalyzer::visit(BinaryStmt *node) {
+    using AST::Operator;
     auto lhs = node->getLHS()->SemAnalyze(this);
     auto rhs = node->getRHS()->SemAnalyze(this);
     if (!lhs || !rhs) return nullptr;
@@ -103,13 +104,39 @@ namespace RJIT::mid::analyzer {
     TypeInfoPtr type = nullptr;
     bool is_right = true;
 
-    if (node->getOp() <= AST::Operator::GreatEq) {
+    if (node->getOp() <= Operator::GreatEq) {
       if (lhs->IsInteger() && rhs->IsInteger()) {
         if (lhs->GetSize() != rhs->GetSize()) {
           type = lhs->GetSize() > rhs->GetSize() ? lhs : rhs;
         } else {
           type = lhs;
         }
+      }
+    }
+
+    // update operator type
+    auto originOp = node->getOp();
+    if (originOp == Operator::SDiv || originOp == Operator::SRem ||
+        originOp == Operator::AShr || originOp == Operator::AssAShr ||
+        originOp == Operator::AssSDiv || originOp == Operator::AssSRem) {
+      if (lhs->IsUnsigned() || rhs->IsUnsigned()) {
+        Operator op = Operator::Dam;
+        switch (originOp) {
+          case Operator::SDiv:    op = Operator::UDiv; break;
+          case Operator::SRem:    op = Operator::URem; break;
+          case Operator::AssSDiv: op = Operator::AssUDiv; break;
+          case Operator::AssSRem: op = Operator::AssURem; break;
+          case Operator::AShr: {
+            if (lhs->IsUnsigned()) op = Operator::LShr;
+            break;
+          }
+          case Operator::AssAShr: {
+            if (lhs->IsUnsigned()) op = Operator::AssLShr;
+            break;
+          }
+          default: break;
+        }
+        node->setOp(op);
       }
     }
 
@@ -193,6 +220,9 @@ namespace RJIT::mid::analyzer {
   }
 
   TypeInfoPtr SemAnalyzer::visit(IfElseStmt *node) {
+    auto cond_type = node->getCondition()->SemAnalyze(this);
+    auto then_type = node->getThen()->SemAnalyze(this);
+    auto else_type = node->getElse()->SemAnalyze(this);
     return node->set_ast_type(MakeVoid());
   }
 

@@ -42,8 +42,9 @@ Instruction::Instruction(unsigned opcode, unsigned operand_nums,
 std::string Instruction::GetOpcodeAsString(unsigned int opcode) {
     switch (opcode) {
       // Terminators
-      case Ret:    return "ret";
       case Br:     return "br";
+      case Ret:    return "ret";
+      case Jmp:    return "br";
 
         // Standard binary operators...
       case Add:  return "add";
@@ -132,6 +133,7 @@ BinaryOperator::Create(Instruction::BinaryOps opcode, const SSAPtr &S1,
   DBG_ASSERT(s2_type->IsPrime(), "S2 is not prime type");
   DBG_ASSERT(s1_type->IsInteger(), "binary operator can only being performed on int");
 
+  // TODO: add necessary cast here
   DBG_ASSERT(s1_type == s2_type, "S1 has different type with S2");
   if (s1_type->IsNotShortThan(s2_type))
     return std::make_shared<BinaryOperator>(opcode, S1, S2, s1_type, IB);
@@ -173,17 +175,17 @@ BinaryPtr BinaryOperator::createNeg(const SSAPtr &Op, const BlockPtr &InsertAtEn
 
 BinaryPtr BinaryOperator::createNot(const SSAPtr &Op, const SSAPtr &InsertBefore) {
   auto typeInfo = Op->type();
-  DBG_ASSERT(typeInfo->IsInteger(), "Neg operator is not integer");
-  auto zero = GetZeroValue(typeInfo->GetType());
-  return std::make_shared<BinaryOperator>(Instruction::Sub, zero, Op,
+  DBG_ASSERT(typeInfo->IsInteger(), "Not operator is not integer");
+  auto C = GetAllOneValue(typeInfo->GetType());
+  return std::make_shared<BinaryOperator>(Instruction::Xor, Op, C,
                                           typeInfo, InsertBefore);
 }
 
 BinaryPtr BinaryOperator::createNot(const SSAPtr &Op, const BlockPtr &InsertAtEnd) {
   auto typeInfo = Op->type();
-  DBG_ASSERT(typeInfo->IsInteger(), "Neg operator is not integer");
-  auto zero = GetZeroValue(typeInfo->GetType());
-  return std::make_shared<BinaryOperator>(Instruction::Sub, zero, Op,
+  DBG_ASSERT(typeInfo->IsInteger(), "Not operator is not integer");
+  auto C = GetAllOneValue(typeInfo->GetType());
+  return std::make_shared<BinaryOperator>(Instruction::Sub, Op, C,
                                           typeInfo, InsertAtEnd);
 }
 
@@ -191,6 +193,67 @@ void BasicBlock::AddInstBefore(const SSAPtr &insertBefore, const SSAPtr &inst) {
   auto it = std::find(_insts.begin(), _insts.end(), insertBefore);
   DBG_ASSERT(it != _insts.end(), "Basic block don't has this instruction");
   _insts.insert(it, inst);
+}
+
+BranchInst::BranchInst(const SSAPtr &cond, const SSAPtr &true_block,
+                       const SSAPtr &false_block, const SSAPtr &IB)
+  : TerminatorInst(Instruction::TermOps::Br, 3, IB) {
+  AddValue(cond);
+  AddValue(true_block);
+  AddValue(false_block);
+}
+
+/* ---------------------------- Methods of Constant Value ------------------------------- */
+
+
+SSAPtr GetZeroValue(TYPE::Type type) {
+  using TYPE::Type;
+  auto zero = std::make_shared<ConstantInt>(0);
+  switch (type) {
+    case Type::Void:
+      zero->set_type(TYPE::MakeVoid());
+      break;
+    case Type::Int8:
+      zero->set_type(TYPE::MakePrimType(Type::Int8, true));
+      break;
+    case Type::UInt8:
+      zero->set_type(TYPE::MakePrimType(Type::UInt8, true));
+      break;
+    case Type::Int32:
+      zero->set_type(TYPE::MakePrimType(Type::Int32, true));
+      break;
+    case Type::UInt32:
+      zero->set_type(TYPE::MakePrimType(Type::UInt32, true));
+      break;
+    default:
+      DBG_ASSERT(0, "Get error zero type");
+  }
+  return zero;
+}
+
+SSAPtr GetAllOneValue(TYPE::Type type) {
+  using TYPE::Type;
+  auto allOne = std::make_shared<ConstantInt>(-1);
+  switch (type) {
+    case Type::Void:
+      allOne->set_type(TYPE::MakeVoid());
+      break;
+    case Type::Int8:
+      allOne->set_type(TYPE::MakePrimType(Type::Int8, true));
+      break;
+    case Type::UInt8:
+      allOne->set_type(TYPE::MakePrimType(Type::UInt8, true));
+      break;
+    case Type::Int32:
+      allOne->set_type(TYPE::MakePrimType(Type::Int32, true));
+      break;
+    case Type::UInt32:
+      allOne->set_type(TYPE::MakePrimType(Type::UInt32, true));
+      break;
+    default:
+      DBG_ASSERT(0, "Get error all-one type");
+  }
+  return allOne;
 }
 
 /* ---------------------------- Methods of dumping IR ------------------------------- */
@@ -264,7 +327,6 @@ inline bool PrintPrefix(std::ostream &os, IdManager &id_mgr, const std::string &
 }
 
 void BinaryOperator::Dump(std::ostream &os, IdManager &id_mgr) const {
-  Instruction::Dump(os, id_mgr);
 }
 
 void BasicBlock::Dump(std::ostream &os, IdManager &id_mgr) const {
@@ -337,6 +399,21 @@ void JumpInst::Dump(std::ostream &os, IdManager &id_mgr) const {
   DumpValue(os, id_mgr, target());
 }
 
+void ReturnInst::Dump(std::ostream &os, IdManager &id_mgr) const {
+  auto guard = InExpr();
+  os << xIndent << "ret ";
+  if (!RetVal()) os << "void";
+  else DumpWithType(os, id_mgr, RetVal());
+//  os << std::endl;
+}
+
+void BranchInst::Dump(std::ostream &os, IdManager &id_mgr) const {
+  auto eguard = InExpr();
+  auto bguard = InBranch();
+  os << xIndent << "br ";
+  DumpValue(os, id_mgr, begin(), end());
+}
+
 void StoreInst::Dump(std::ostream &os, IdManager &id_mgr) const {
   auto guard = InExpr();
   os << xIndent << "store ";
@@ -376,16 +453,8 @@ void ArgRefSSA::Dump(std::ostream &os, IdManager &id_mgr) const {
   os << _arg_name;
 }
 
-void ReturnInst::Dump(std::ostream &os, IdManager &id_mgr) const {
-  auto guard = InExpr();
-  os << xIndent << "ret ";
-  if (!RetVal()) os << "void";
-  else DumpWithType(os, id_mgr, RetVal());
-  os << std::endl;
-}
-
 void ConstantInt::Dump(std::ostream &os, IdManager &id_mgr) const {
-
+  os << _value;
 }
 
 

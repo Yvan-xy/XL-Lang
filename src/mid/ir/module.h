@@ -7,6 +7,7 @@
 #include "lib/debug.h"
 #include "lib/guard.h"
 #include "lib/nestedmap.h"
+#include "define/AST.h"
 #include "define/type.h"
 
 namespace RJIT::mid {
@@ -78,7 +79,19 @@ public:
 
   SSAPtr   CreateLoad(const SSAPtr &ptr);
 
+  SSAPtr   CreateBranch(const SSAPtr &cond, const BlockPtr &true_block, const BlockPtr &false_block);
+
+  SSAPtr   CreateBinaryOperator(AST::Operator opcode, const SSAPtr &S1, const SSAPtr &S2);
+
+  SSAPtr   CreatePureBinaryInst(Instruction::BinaryOps opcode, const SSAPtr &S1, const SSAPtr &S2);
+
+  SSAPtr   CreateAssign(const SSAPtr &S1, const SSAPtr &S2);
+
+  SSAPtr   CreateConstInt(unsigned int value);
+
   UserPtr  GetFunction(const std::string &func_name);
+
+  SSAPtr   GetValues(const std::string &var_name);
 
   // setters
   // set current context (logger)
@@ -88,19 +101,25 @@ public:
   void SetRetValue   (const SSAPtr  &val)  { _return_val = val;  }
   void SetFuncEntry  (const BlockPtr &BB)  { _func_entry = BB;   }
   void SetFuncExit   (const BlockPtr &BB)  { _func_exit = BB;    }
+
   void SetInsertPoint(const BlockPtr &BB)  {
+    SetInsertPoint(BB, BB->insts().end());
+  }
+
+  void SetInsertPoint(const BlockPtr &BB, SSAPtrList::iterator it) {
     _insert_point = BB;
-    _insert_pos = BB->insts().end();
+    _insert_pos = it;
   }
 
   // getters
-  SSAPtr          &ReturnValue() { return _return_val;   }
-  UserList        &GlobalVars()  { return _global_vars;  }
-  ValueEnvPtr     &ValueSymTab() { return _value_symtab; }
-  FunctionList    &Functions()   { return _functions;    }
-  BlockPtr        &InsertPoint() { return _insert_point; }
-  BlockPtr        &FuncEntry()   { return _func_entry;   }
-  BlockPtr        &FuncExit()    { return _func_exit;    }
+  SSAPtr               &ReturnValue() { return _return_val;   }
+  UserList             &GlobalVars()  { return _global_vars;  }
+  ValueEnvPtr          &ValueSymTab() { return _value_symtab; }
+  FunctionList         &Functions()   { return _functions;    }
+  BlockPtr             &InsertPoint() { return _insert_point; }
+  BlockPtr             &FuncEntry()   { return _func_entry;   }
+  BlockPtr             &FuncExit()    { return _func_exit;    }
+  SSAPtrList::iterator  InsertPos()   { return _insert_pos;   }
 };
 
 

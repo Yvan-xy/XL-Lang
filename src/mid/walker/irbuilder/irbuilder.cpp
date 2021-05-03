@@ -1,10 +1,9 @@
 #include "irbuilder.h"
-#include "mid/ir/ssa.h"
 
 namespace RJIT::mid {
 
 SSAPtr IRBuilder::visit(IntAST *node) {
-  return nullptr;
+  return _module.CreateConstInt(node->getValue());
 }
 
 SSAPtr IRBuilder::visit(CharAST *node) {
@@ -16,10 +15,30 @@ SSAPtr IRBuilder::visit(StringAST *node) {
 }
 
 SSAPtr IRBuilder::visit(VariableAST *node) {
-  return nullptr;
+  auto var_ssa = _module.GetValues(node->getName());
+  DBG_ASSERT(var_ssa != nullptr, "variable not found");
+  return var_ssa;
 }
 
 SSAPtr IRBuilder::visit(VariableDecl *node) {
+  auto context = _module.SetContext(node->Logger());
+
+  // save current insert point
+  auto cur_insert = _module.InsertPoint();
+
+  // update insert at entry
+  for (const auto &it : node->getDefs()) {
+    auto variable = _module.CreateAlloca(node->AstType());
+    if (it->hasInit()) {
+      auto init_ssa = it->getInitValue()->CodeGeneAction(this);
+      DBG_ASSERT(init_ssa != nullptr, "emit init value failed");
+
+      auto last_pos = _module.FuncEntry()->insts().end();
+      _module.SetInsertPoint(_module.FuncEntry(), --last_pos);
+      _module.CreateAssign(variable, init_ssa);
+    }
+  }
+  _module.SetInsertPoint(cur_insert);
   return nullptr;
 }
 
@@ -28,7 +47,13 @@ SSAPtr IRBuilder::visit(VariableDefAST *node) {
 }
 
 SSAPtr IRBuilder::visit(BinaryStmt *node) {
-  return nullptr;
+  auto lhs = node->getLHS()->CodeGeneAction(this);
+  DBG_ASSERT(lhs != nullptr, "lhs generate failed");
+  auto rhs = node->getRHS()->CodeGeneAction(this);
+  DBG_ASSERT(rhs != nullptr, "rhs generate failed");
+  auto bin_inst = _module.CreateBinaryOperator(node->getOp(), lhs, rhs);
+  DBG_ASSERT(bin_inst != nullptr, "binary statement generate failed");
+  return bin_inst;
 }
 
 SSAPtr IRBuilder::visit(UnaryStmt *node) {
@@ -63,7 +88,50 @@ SSAPtr IRBuilder::visit(CompoundStmt *node) {
   return block;
 }
 
+// create if-then-else blocks
+/*
+ *            cond_block
+ *           /          \
+ *         then        else
+ *          |            |  ------> else and else_ssa and be merged in the opt stage
+ *       then_ssa    else_ssa
+ *           \          /
+ *            end_block
+ */
 SSAPtr IRBuilder::visit(IfElseStmt *node) {
+  auto context = _module.SetContext(node->Logger());
+  auto func = _module.InsertPoint()->parent();
+
+  // create condition block
+  auto &cond = node->getCondition();
+  auto cond_block = cond->CodeGeneAction(this);
+  auto then_block = _module.CreateBlock(func, "if_then");
+  auto else_block = _module.CreateBlock(func, "if.else");
+
+  auto cond_ssa = cond->CodeGeneAction(this);
+  DBG_ASSERT(cond_ssa != nullptr, "emit condition statement failed");
+  _module.CreateBranch(cond_ssa, then_block, else_block);
+
+  // create if end block
+  auto end_block = _module.CreateBlock(func, "if.end");
+
+  // create then block
+  auto &then_ast = node->getThen();
+  _module.SetInsertPoint(then_block);
+  auto then_ssa = then_ast->CodeGeneAction(this);
+  DBG_ASSERT(then_ssa != nullptr, "emit then block failed");
+  _module.CreateJump(end_block);
+
+  // create else block
+  auto &else_ast = node->getElse();
+  _module.SetInsertPoint(else_block);
+  auto else_ssa = else_ast->CodeGeneAction(this);
+  DBG_ASSERT(else_ssa != nullptr, "emit else block failed");
+  _module.CreateJump(end_block);
+
+  // set end_block as the insert point
+  _module.SetInsertPoint(end_block);
+
   return nullptr;
 }
 

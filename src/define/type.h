@@ -291,6 +291,11 @@ inline TypeInfoPtr MakePrimType(Type type, bool is_right) {
   return std::make_shared<PrimType>(type, is_right);
 }
 
+// create a new primitive type
+inline TypeInfoPtr MakeConst(Type type, bool is_right = true) {
+  return std::make_shared<ConstType>(MakePrimType(type, is_right));
+}
+
 // create a new void type
 inline TypeInfoPtr MakeVoid() {
   return std::make_shared<PrimType>(Type::Void, true);

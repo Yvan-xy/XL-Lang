@@ -31,7 +31,7 @@
 # define DBG_ASSERT(cond, fmt, ...) \
   do { \
     if (!(cond)) { \
-      printf("error: %s:%d:%s()", __FILE__, __LINE__, __FUNCTION__); \
+      printf("error: %s:%d:%s() ", __FILE__, __LINE__, __FUNCTION__); \
       printf(fmt, ##__VA_ARGS__); \
       abort(); \
     } \

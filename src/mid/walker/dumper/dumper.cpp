@@ -20,7 +20,7 @@ namespace RJIT::mid {
   }
 
   void Dumper::visit(VariableAST *node) {
-    os << "[ \"" << node->getName() << "\" : " << node->getTypeStr() <<" ]";
+    os << "[ \"" << node->getName() << "\" : " << node->AstType()->GetTypeId() <<" ]";
   }
 
   void Dumper::visit(VariableDecl *node) {
