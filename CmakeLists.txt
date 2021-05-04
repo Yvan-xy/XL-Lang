@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(RJit)
+project(XY-Lang)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -31,8 +31,8 @@ add_subdirectory("${RJIT_SOURCE_DIR}/mid")
 add_subdirectory("${RJIT_SOURCE_DIR}/lib")
 
 
-add_executable(rjit main.cpp)
-target_link_libraries(rjit
+add_executable(xycc main.cpp)
+target_link_libraries(xycc
         RJIT::front
         RJIT::mid
 )

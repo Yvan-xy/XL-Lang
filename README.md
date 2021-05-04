@@ -1,6 +1,6 @@
-# RJIT
+# XY-Lang
 
-## EBNF of RJitLang
+## EBNF of XY-Lang
 
 ```ebnf
 trans_unit  ::= [trans_unit](declation | func_def)

@@ -13,7 +13,7 @@ using namespace RJIT::mid;
 using namespace RJIT::mid::analyzer;
 
 int main(int argc, char *argv[]) {
-  Lexer lexer("a.c");
+  Lexer lexer("a.xy");
   Parser parser(&lexer);
   parser.Parse();
 
