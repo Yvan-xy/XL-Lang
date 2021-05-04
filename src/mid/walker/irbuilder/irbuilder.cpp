@@ -28,21 +28,27 @@ SSAPtr IRBuilder::visit(VariableDecl *node) {
 
   // update insert at entry
   for (const auto &it : node->getDefs()) {
-    auto variable = _module.CreateAlloca(node->AstType());
-    if (it->hasInit()) {
-      auto init_ssa = it->getInitValue()->CodeGeneAction(this);
-      DBG_ASSERT(init_ssa != nullptr, "emit init value failed");
-
-      auto last_pos = _module.FuncEntry()->insts().end();
-      _module.SetInsertPoint(_module.FuncEntry(), --last_pos);
-      _module.CreateAssign(variable, init_ssa);
-    }
+    it->CodeGeneAction(this);
   }
   _module.SetInsertPoint(cur_insert);
   return nullptr;
 }
 
 SSAPtr IRBuilder::visit(VariableDefAST *node) {
+  auto variable = _module.CreateAlloca(node->AstType());
+
+  auto symtab = _module.ValueSymTab();
+  symtab->AddItem(node->getIdentifier(), variable);
+
+  if (node->hasInit()) {
+    auto init_ssa = node->getInitValue()->CodeGeneAction(this);
+    DBG_ASSERT(init_ssa != nullptr, "emit init value failed");
+
+    auto last_pos = _module.FuncEntry()->insts().end();
+    _module.SetInsertPoint(_module.FuncEntry(), --last_pos);
+    _module.CreateAssign(variable, init_ssa);
+  }
+
   return nullptr;
 }
 

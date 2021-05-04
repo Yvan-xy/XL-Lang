@@ -80,10 +80,6 @@ public:
 
   virtual std::string ArgName() const { return ""; }
 
-  virtual bool hasInit() { return false; }
-
-  virtual BaseAST* getInitValue() { return nullptr; }
-
   const TypeInfoPtr &AstType() const { return ast_type; }
 };
 
@@ -219,25 +215,26 @@ public:
 
 class VariableDefAST : public BaseAST {
 private:
-  RJIT::TYPE::Type type;
-  std::string identifier;
-  ASTPtr initValue;
+  RJIT::TYPE::Type _type;
+  std::string _identifier;
+  ASTPtr _initValue;
 
 public:
-  VariableDefAST(std::string id, ASTPtr init) : identifier(std::move(id)), initValue(std::move(init)) {}
+  VariableDefAST(std::string id, ASTPtr init) : _identifier(std::move(id)), _initValue(std::move(init)) {}
 
-  const std::string &getIdentifier() { return identifier; }
+  const std::string &getIdentifier() { return _identifier; }
 
-  bool hasInit() override {
-    if (initValue) {
+  bool hasInit() {
+    if (_initValue) {
       return true;
     }
     return false;
   }
 
-  BaseAST *getInitValue() override {return initValue.get(); }
+  ASTPtr &getInitValue()  {return _initValue; }
 
-  void setType(RJIT::TYPE::Type _type) { _type = type; }
+  void setType(RJIT::TYPE::Type T) { _type = T; }
+  TYPE::Type type() const { return _type; }
 
   void Dump(mid::Dumper *) override;
 

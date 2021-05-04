@@ -81,7 +81,7 @@ namespace RJIT::mid::analyzer {
     var_type = MakePrimType(_decl_type, false);
     _symbol->AddItem(node->getIdentifier(), var_type);
 
-    return node->set_ast_type(MakeVoid());
+    return node->set_ast_type(MakePrimType(node->type(), false));
   }
 
   TypeInfoPtr SemAnalyzer::visit(BinaryStmt *node) {

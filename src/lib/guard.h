@@ -1,6 +1,8 @@
 #ifndef RJIT_GUARD_H
 #define RJIT_GUARD_H
 
+// reference: xstl https://github.com/MaxXSoft/XSTL
+
 #include <utility>
 #include <functional>
 
