@@ -134,7 +134,7 @@ BinaryOperator::Create(Instruction::BinaryOps opcode, const SSAPtr &S1,
   DBG_ASSERT(s1_type->IsInteger(), "binary operator can only being performed on int");
 
   // TODO: add necessary cast here
-  DBG_ASSERT(s1_type == s2_type, "S1 has different type with S2");
+//  DBG_ASSERT(s1_type == s2_type, "S1 has different type with S2");
   if (s1_type->IsNotShortThan(s2_type))
     return std::make_shared<BinaryOperator>(opcode, S1, S2, s1_type, IB);
   else
@@ -201,6 +201,12 @@ BranchInst::BranchInst(const SSAPtr &cond, const SSAPtr &true_block,
   AddValue(cond);
   AddValue(true_block);
   AddValue(false_block);
+}
+
+CallInst::CallInst(const SSAPtr &callee, const std::vector<SSAPtr> &args, const SSAPtr &IB) :
+    Instruction(Instruction::OtherOps::Call, args.size() + 1, IB) {
+  AddValue(callee);
+  for (const auto &it : args) AddValue(it);
 }
 
 /* ---------------------------- Methods of Constant Value ------------------------------- */
@@ -327,6 +333,15 @@ inline bool PrintPrefix(std::ostream &os, IdManager &id_mgr, const std::string &
 }
 
 void BinaryOperator::Dump(std::ostream &os, IdManager &id_mgr) const {
+  if (PrintPrefix(os, id_mgr, this)) return;
+
+  auto guard = InExpr();
+
+  os << this->GetOpcodeAsString() << " ";
+  DumpType(os, type());
+  os << " ";
+  DumpValue(os, id_mgr, begin(), end());
+  os << std::endl;
 }
 
 void BasicBlock::Dump(std::ostream &os, IdManager &id_mgr) const {
@@ -450,7 +465,7 @@ void LoadInst::Dump(std::ostream &os, IdManager &id_mgr) const {
 }
 
 void ArgRefSSA::Dump(std::ostream &os, IdManager &id_mgr) const {
-  os << _arg_name;
+  os << "%" << _arg_name;
 }
 
 void ConstantInt::Dump(std::ostream &os, IdManager &id_mgr) const {
@@ -460,6 +475,28 @@ void ConstantInt::Dump(std::ostream &os, IdManager &id_mgr) const {
 
 void ConstantString::Dump(std::ostream &os, IdManager &id_mgr) const {
 
+}
+
+void CallInst::Dump(std::ostream &os, IdManager &id_mgr) const {
+  if (PrintPrefix(os, id_mgr, this)) return;
+  auto guard = InExpr();
+  os << "call ";
+  // dump return type
+  DumpType(os, type());
+  os << " @";
+
+  // dump callee name
+  auto callee = Callee();
+  auto name = std::static_pointer_cast<Function>(callee)->GetFunctionName();
+  os << name << "(";
+
+  for (std::size_t i = 1; i < size(); i++) {
+    auto arg = (*this)[i].get();
+    DumpWithType(os, id_mgr, arg);
+    if (i != size() - 1) os << ", ";
+  }
+
+  os << ")" << std::endl;
 }
 
 }

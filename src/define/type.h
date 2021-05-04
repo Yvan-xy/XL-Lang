@@ -208,6 +208,11 @@ public:
   bool operator==(const TypeInfoPtr &typeInfo) override {
     return type->GetType() == typeInfo->GetType();
   }
+
+  bool IsNotShortThan(const TypeInfoPtr &type) override {
+    DBG_ASSERT(type->IsPrime(), "can't compare with non-prime type");
+    return type->GetType() >= type->GetType();
+  }
 };
 
 class FuncType : public TypeInfo {

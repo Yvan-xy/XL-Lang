@@ -18,6 +18,8 @@ public:
   BasicBlock(UserPtr parent, std::string name)
       : _name(std::move(name)), _parent(std::move(parent)) {}
 
+  bool isInstruction() const override { return false; }
+
   // dump ir
   void Dump(std::ostream &os, IdManager &id_mgr) const override;
 
@@ -124,6 +126,9 @@ public:
     return isCast(opcode());
   }
 
+  bool isInstruction() const override { return true; }
+
+
   //----------------------------------------------------------------------
   // Exported opcode enumerations...
   // TermOps, BinaryOps, MemoryOps, CastOps, OtherOps
@@ -158,6 +163,8 @@ public:
                  unsigned operands_num, const BlockPtr &insertAtEnd)
       : Instruction(opcode, operands_num, operands, insertAtEnd) {}
 
+  bool isInstruction() const override { return true; }
+
   // dump ir
   void Dump(std::ostream &os, IdManager &id_mgr) const override {}
 
@@ -190,6 +197,7 @@ public:
     AddValue(V);
   }
 
+  bool isInstruction() const override { return true; }
 
   static unsigned GetNumOperands() { return 1; }
 };
@@ -216,6 +224,8 @@ public:
 
   static BinaryPtr Create(BinaryOps opcode, const SSAPtr &S1,
                           const SSAPtr &S2, const BlockPtr &IAE);
+
+  bool isInstruction() const override { return true; }
 
   // Create* - These methods just forward to create, and are useful when you
   // statically know what type of instruction you're going to create.  These
@@ -266,6 +276,8 @@ private:
 public:
   explicit Function(std::string name) : _function_name(std::move(name)) {}
 
+  bool isInstruction() const override { return false; }
+
   // dump ir
   void Dump(std::ostream &os, IdManager &id_mgr) const override;
 
@@ -287,6 +299,8 @@ public:
     : TerminatorInst(Instruction::TermOps::Jmp,1, IB) {
     AddValue(target);
   }
+
+  bool isInstruction() const override { return true; }
 
   // dump ir
   void Dump(std::ostream &os, IdManager &id_mgr) const override;
@@ -315,6 +329,8 @@ public:
   explicit ReturnInst(const SSAPtr &value, const SSAPtr &IB = nullptr)
       : TerminatorInst(Instruction::TermOps::Ret,1, IB)
   { AddValue(value); }
+
+  bool isInstruction() const override { return true; }
 
   // dump ir
   void Dump(std::ostream &os, IdManager &id_mgr) const override;
@@ -346,6 +362,8 @@ class BranchInst : public TerminatorInst {
 public:
   BranchInst(const SSAPtr &cond, const SSAPtr &true_block,
              const SSAPtr &false_block, const SSAPtr &IB = nullptr);
+
+  bool isInstruction() const override { return true; }
 
   // dump ir
   void Dump(std::ostream &os, IdManager &id_mgr) const override;
@@ -385,6 +403,8 @@ public:
     AddValue(P);
   }
 
+  bool isInstruction() const override { return true; }
+
   // dump ir
   void Dump(std::ostream &os, IdManager &id_mgr) const override;
 
@@ -407,6 +427,8 @@ public:
     : Instruction(Instruction::MemoryOps::Alloca, 0, IB),
     _name(name) {}
 
+  bool isInstruction() const override { return true; }
+
   // dump ir
   void Dump(std::ostream &os, IdManager &id_mgr) const override;
 
@@ -421,6 +443,8 @@ public:
     : Instruction(Instruction::MemoryOps::Load, 1, IB) {
     AddValue(ptr);
   }
+
+  bool isInstruction() const override { return true; }
 
   // dump ir
   void Dump(std::ostream &os, IdManager &id_mgr) const override;
@@ -439,8 +463,10 @@ private:
   std::string _arg_name;
 
 public:
-  ArgRefSSA(const SSAPtr &func, std::size_t index, std::string name)
-    : _func(func), _index(index), _arg_name(std::move(name)) {}
+  ArgRefSSA(SSAPtr func, std::size_t index, std::string name)
+    : _func(std::move(func)), _index(index), _arg_name(std::move(name)) {}
+
+  bool isInstruction() const override { return false; }
 
   // dump ir
   void Dump(std::ostream &os, IdManager &id_mgr) const override;
@@ -451,6 +477,20 @@ public:
   const std::string arg_name() const { return _arg_name; }
 };
 
+// function call
+// operands: callee, parameters
+class CallInst : public Instruction {
+public:
+  CallInst(const SSAPtr &callee, const std::vector<SSAPtr> &args, const SSAPtr &IB = nullptr);
+
+  bool isInstruction() const override { return true; }
+
+  // dump ir
+  void Dump(std::ostream &os, IdManager &id_mgr) const override;
+
+  // getter/setter
+  const SSAPtr & Callee() const { return (*this)[0].get(); }
+};
 
 }
 #endif //RJIT_SSA_H

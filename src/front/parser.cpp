@@ -406,11 +406,6 @@ namespace RJIT::front {
       } else if (isEqualSign()) {
         ASTPtr assignAST = ParseBinaryOPRHS(0, std::move(varAST));
 
-        if (!isSemicolon()) {
-          LogError("Expect a ';' here.");
-        }
-        nextToken();// eat ;
-
         return assignAST;
       } else {
         DBG_WARN(1, "unknown operator here");
@@ -610,33 +605,33 @@ namespace RJIT::front {
 
     auto log = logger();
     ASTPtr retAST = MakeAST<ReturnStmt>(std::move(log), std::move(retVal));
-    if (!isSemicolon()) {
-      LogError("Expect a ';' here.");
-    }
-    nextToken();// eat ;
+
     return retAST;
   }
 
   ASTPtr Parser::ParsePrimary() {
+    ASTPtr node;
     if (isDefine()) {
-      return ParseFunctionDef();
+      node = ParseFunctionDef();
     } else if (isVar()) {
-      return ParseVariableDecl();
+      node = ParseVariableDecl();
     } else if (isIf()) {
-      return ParseIfElse();
+      node = ParseIfElse();
     } else if (isWhile()) {
-      return ParseWhile();
+      node = ParseWhile();
     } else if (curToken.isIdentifier()) {
-      return ParseIdentifier();
+      node =  ParseIdentifier();
     } else if (isConst()) {
-      return ParseConst();
+      node = ParseConst();
     } else if (isLeftParentheses()) {
-      return ParseParenExpr();
+      node = ParseParenExpr();
     } else if (isReturn()) {
-      return ParseReturn();
+      node = ParseReturn();
     } else {
-      return ParseExpression();
+      node = ParseExpression();
     }
+    if (isSemicolon()) nextToken(); // eat ';'
+    return node;
   }
 
   ASTPtr Parser::ParseTop() {

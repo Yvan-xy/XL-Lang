@@ -104,7 +104,7 @@ namespace RJIT::mid::analyzer {
     TypeInfoPtr type = nullptr;
     bool is_right = true;
 
-    if (node->getOp() <= Operator::GreatEq) {
+    if (node->getOp() <= Operator::SGreatEq) {
       if (lhs->IsInteger() && rhs->IsInteger()) {
         if (lhs->GetSize() != rhs->GetSize()) {
           type = lhs->GetSize() > rhs->GetSize() ? lhs : rhs;
@@ -116,16 +116,23 @@ namespace RJIT::mid::analyzer {
 
     // update operator type
     auto originOp = node->getOp();
-    if (originOp == Operator::SDiv || originOp == Operator::SRem ||
-        originOp == Operator::AShr || originOp == Operator::AssAShr ||
-        originOp == Operator::AssSDiv || originOp == Operator::AssSRem) {
+    if (originOp == Operator::SDiv    || originOp == Operator::SRem    ||
+        originOp == Operator::AShr    || originOp == Operator::AssAShr ||
+        originOp == Operator::SLess   || originOp == Operator::SGreat  ||
+        originOp == Operator::AssSDiv || originOp == Operator::AssSRem ||
+        originOp == Operator::SLessEq || originOp == Operator::SGreatEq) {
+      // TODO: here
       if (lhs->IsUnsigned() || rhs->IsUnsigned()) {
         Operator op = Operator::Dam;
         switch (originOp) {
-          case Operator::SDiv:    op = Operator::UDiv; break;
-          case Operator::SRem:    op = Operator::URem; break;
-          case Operator::AssSDiv: op = Operator::AssUDiv; break;
-          case Operator::AssSRem: op = Operator::AssURem; break;
+          case Operator::SDiv:     op = Operator::UDiv;     break;
+          case Operator::SRem:     op = Operator::URem;     break;
+          case Operator::SLess:    op = Operator::ULess;    break;
+          case Operator::SGreat:   op = Operator::UGreat;   break;
+          case Operator::AssSDiv:  op = Operator::AssUDiv;  break;
+          case Operator::AssSRem:  op = Operator::AssURem;  break;
+          case Operator::SLessEq:  op = Operator::ULessEq;  break;
+          case Operator::SGreatEq: op = Operator::UGreatEq; break;
           case Operator::AShr: {
             if (lhs->IsUnsigned()) op = Operator::LShr;
             break;

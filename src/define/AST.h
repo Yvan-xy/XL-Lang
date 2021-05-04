@@ -33,7 +33,8 @@ enum class Operator {
   Add, Sub, Mul, SDiv, UDiv, SRem, URem, And, Or, Xor, Shl, AShr, LShr,
 
   // logical
-  LAnd, LOr, Equal, NotEqual, Less, LessEq, Great, GreatEq,
+  LAnd, LOr, Equal, NotEqual,
+  SLess, ULess, SLessEq, ULessEq, SGreat, UGreat, SGreatEq, UGreatEq,
 
   // assign with arithmetic
   Assign, AssAdd, AssSub, AssMul, AssSDiv, AssUDiv, AssSRem, AssURem,

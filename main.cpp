@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
   SemAnalyzer semAnalyzer(parser.ast());
   semAnalyzer.Analyze();
 
-  parser.DumpAST();
+//  parser.DumpAST();
 
   IRBuilder irBuilder(parser.ast());
 

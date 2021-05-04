@@ -59,6 +59,7 @@ SSAPtr IRBuilder::visit(BinaryStmt *node) {
   DBG_ASSERT(rhs != nullptr, "rhs generate failed");
   auto bin_inst = _module.CreateBinaryOperator(node->getOp(), lhs, rhs);
   DBG_ASSERT(bin_inst != nullptr, "binary statement generate failed");
+
   return bin_inst;
 }
 
@@ -67,6 +68,27 @@ SSAPtr IRBuilder::visit(UnaryStmt *node) {
 }
 
 SSAPtr IRBuilder::visit(ReturnStmt *node) {
+  auto context = _module.SetContext(node->Logger());
+  if (!node->hasReturnVal()) return nullptr;
+
+  // generate return value
+  auto retval = node->getReturn()->CodeGeneAction(this);
+  DBG_ASSERT(retval != nullptr, "emit return value failed");
+
+  // save current insert point
+  auto cur_insert = _module.InsertPoint();
+
+  // store value to retval
+  auto func_exit = _module.FuncExit();
+  _module.SetInsertPoint(func_exit, func_exit->inst_end());
+
+  // copy return value
+  auto store_inst = _module.CreateAssign(_module.ReturnValue(), retval);
+  DBG_ASSERT(store_inst != nullptr, "copy return value failed");
+
+  // recover insert point
+  _module.SetInsertPoint(cur_insert);
+
   return nullptr;
 }
 
@@ -81,11 +103,15 @@ SSAPtr IRBuilder::visit(ContinueStmt *node) {
 SSAPtr IRBuilder::visit(CompoundStmt *node) {
   // make new environment when not in function
   auto guard = !_in_func ? NewEnv() : Guard(nullptr);
-  if (_in_func) _in_func = false;
+  bool set_name = false;
+  if (_in_func) {
+    set_name = true;
+    _in_func = false;
+  }
 
   // create new block
   const auto &cur_func = _module.InsertPoint()->parent();
-  auto block = _module.CreateBlock(cur_func);
+  auto block = _module.CreateBlock(cur_func, (set_name ? "body" : ""));
   _module.CreateJump(block);
   _module.SetInsertPoint(block);
   for (const auto &it : node->stmts()) {
@@ -142,6 +168,21 @@ SSAPtr IRBuilder::visit(IfElseStmt *node) {
 }
 
 SSAPtr IRBuilder::visit(CallStmt *node) {
+  auto context = _module.SetContext(node->Logger());
+
+  auto callee = _module.GetFunction(node->getSymbol());
+  DBG_ASSERT(callee != nullptr, "can't find function %s in symtable", node->getSymbol().c_str());
+
+  // emit args
+  std::vector<SSAPtr> args;
+  for (const auto &it : node->getArgs()) {
+    auto arg = it->CodeGeneAction(this);
+    DBG_ASSERT(arg != nullptr, "emit arg failed");
+    args.push_back(arg);
+  }
+
+  auto call_inst = _module.CreateCallInst(callee, args);
+
   return nullptr;
 }
 
@@ -202,6 +243,7 @@ SSAPtr IRBuilder::visit(FunctionDefAST *node) {
 
   // generate prototype
   auto prototype = node->getProtoType()->CodeGeneAction(this);
+
   // generate body
   auto body = node->getBody()->CodeGeneAction(this);
 
@@ -216,6 +258,7 @@ SSAPtr IRBuilder::visit(FunctionDefAST *node) {
   } else {
     _module.CreateReturn(nullptr);
   }
+
   return nullptr;
 }
 

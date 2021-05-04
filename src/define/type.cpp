@@ -38,13 +38,13 @@ Operator string2Operator(const std::string &op, bool isUnary) {
   } else if (op == "!=") {
     return Operator::NotEqual;
   } else if (op == "<") {
-    return Operator::Less;
+    return Operator::SLess;
   } else if (op == "<=") {
-    return Operator::LessEq;
+    return Operator::SLessEq;
   } else if (op == ">") {
-    return Operator::Great;
+    return Operator::SGreat;
   } else if (op == ">=") {
-    return Operator::GreatEq;
+    return Operator::SGreatEq;
   } else if (op == "=") {
     return Operator::Assign;
   } else if (op == "+=") {
@@ -110,13 +110,17 @@ std::string operator2String(Operator oper) {
       return "==";
     case Operator::NotEqual:
       return "!=";
-    case Operator::Less:
+    case Operator::SLess:
+    case Operator::ULess:
       return "<";
-    case Operator::LessEq:
+    case Operator::SLessEq:
+    case Operator::ULessEq:
       return "<=";
-    case Operator::Great:
+    case Operator::SGreat:
+    case Operator::UGreat:
       return ">";
-    case Operator::GreatEq:
+    case Operator::SGreatEq:
+    case Operator::UGreatEq:
       return ">=";
     case Operator::Assign:
       return "=";
@@ -203,9 +207,9 @@ std::string PrimType::GetTypeId() const {
     case Type::Int32:
       return "i32";
     case Type::UInt8:
-      return "u8";
+      return "i8";
     case Type::UInt32:
-      return "u32";
+      return "i32";
     case Type::String:
       return "i8";
     case Type::Dam:

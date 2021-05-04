@@ -89,7 +89,9 @@ public:
 
   SSAPtr   CreateConstInt(unsigned int value);
 
-  UserPtr  GetFunction(const std::string &func_name);
+  SSAPtr   CreateCallInst(const SSAPtr &callee, const std::vector<SSAPtr>& args);
+
+  FuncPtr GetFunction(const std::string &func_name);
 
   SSAPtr   GetValues(const std::string &var_name);
 

@@ -56,6 +56,7 @@ public:
   // dump the content of SSA value to output stream
   virtual void Dump(std::ostream &os, IdManager &id_mgr) const = 0;
 
+  virtual bool isInstruction() const { return false; }
   const UseList &uses() const { return _use_list; }
   const front::LoggerPtr &logger() const { return _logger; }
   const TYPE::TypeInfoPtr &type() const { return _type; }
