@@ -2,7 +2,6 @@
 #include "module.h"
 #include "constant.h"
 #include "idmanager.h"
-#include "define/AST.h"
 
 namespace RJIT::mid {
 
@@ -151,7 +150,11 @@ SSAPtr Module::CreateLoad(const SSAPtr &ptr) {
   auto type = ptr->type();
   DBG_ASSERT(type->IsPointer(), "loading from non-pointer type is forbidden");
   auto load = AddInst<LoadInst>(ptr);
-  load->set_type(ptr->type()->GetDereferenceType());
+
+  // set load type
+  auto load_type = ptr->type()->GetDereferenceType();
+  DBG_ASSERT(load_type != nullptr, "load type is nullptr");
+  load->set_type(load_type);
   return load;
 }
 
@@ -217,7 +220,8 @@ static unsigned OpToOpcode(AST::Operator op) {
 // S1 = S2;
 SSAPtr Module::CreateAssign(const SSAPtr &S1, const SSAPtr &S2) {
   using BinaryOps = Instruction::BinaryOps;
-  bool is_bin = false;
+  using OtherOps = Instruction::OtherOps;
+  bool is_bin = false, is_call = false;
   std::shared_ptr<Instruction> inst;
 
   // check if S2 is binary operator
@@ -227,17 +231,18 @@ SSAPtr Module::CreateAssign(const SSAPtr &S1, const SSAPtr &S2) {
         inst->opcode() < BinaryOps::BinaryOpsEnd) {
       is_bin = true;
     }
+
+    if (inst->opcode() == OtherOps::Call) is_call = true;
   }
 
-  if (S2->type()->IsConst() || is_bin) {
+  if (S2->type()->IsConst() || is_bin || is_call) {
     // S1 = C ---> store C, s1
     auto store_inst = AddInst<StoreInst>(S2, S1);
     DBG_ASSERT(store_inst != nullptr, "emit store inst failed");
     return store_inst;
   } else {
     // S1 = S2 ---> %0 = load s2; store %0, i32* s1
-    auto load_inst = AddInst<LoadInst>(S2);
-    load_inst->set_type(S2->type()->GetDereferenceType());  // set load type
+    auto load_inst = CreateLoad(S2);
 
     // TODO: add necessary cast here
     auto store_inst = AddInst<StoreInst>(load_inst, S1);
@@ -249,17 +254,15 @@ SSAPtr Module::CreateAssign(const SSAPtr &S1, const SSAPtr &S2) {
 SSAPtr Module::CreatePureBinaryInst(Instruction::BinaryOps opcode,
                                     const SSAPtr &S1, const SSAPtr &S2) {
   DBG_ASSERT(opcode >= Instruction::BinaryOps::Add, "opcode is not pure binary operator");
-  std::shared_ptr<LoadInst> load_s1 = nullptr;
-  std::shared_ptr<LoadInst> load_s2 = nullptr;
+  SSAPtr load_s1 = nullptr;
+  SSAPtr load_s2 = nullptr;
   if (!S1->type()->IsConst()) {
-    load_s1 = AddInst<LoadInst>(S1);
-    load_s1->set_type(S1->type()->GetDereferenceType());
+    load_s1 = CreateLoad(S1);
     DBG_ASSERT(load_s1 != nullptr, "emit load S1 failed");
   }
 
   if (!S2->type()->IsConst()) {
-    load_s2 = AddInst<LoadInst>(S2);
-    load_s2->set_type(S2->type()->GetDereferenceType());
+    load_s2 = CreateLoad(S2);
     DBG_ASSERT(load_s1 != nullptr, "emit load S2 failed");
   }
 
@@ -297,7 +300,7 @@ SSAPtr Module::CreateBinaryOperator(AST::Operator op,
     auto assign_inst = CreateAssign(S1, bin_inst);
     return assign_inst;
   } else if (opcode == OtherOps::ICmp) {
-
+    return CreateICmpInst(op, S1, S2);
   } else if (opcode >= BinaryOps::Add && opcode <= BinaryOps::BinaryOpsEnd) {
     return CreatePureBinaryInst(static_cast<BinaryOps>(opcode), S1, S2);
   }
@@ -329,8 +332,7 @@ SSAPtr Module::CreateCallInst(const SSAPtr &callee, const std::vector<SSAPtr>& a
     if (it->type()->IsConst() || is_bin) {
       new_args.push_back(it);
     } else {
-      auto load_inst = AddInst<LoadInst>(it);
-      load_inst->set_type(it->type()->GetDereferenceType());
+      auto load_inst = CreateLoad(it);
       DBG_ASSERT(load_inst != nullptr, "emit load inst before call inst failed");
       new_args.push_back(load_inst);
     }
@@ -340,6 +342,31 @@ SSAPtr Module::CreateCallInst(const SSAPtr &callee, const std::vector<SSAPtr>& a
   DBG_ASSERT(call_inst != nullptr, "emit call inst failed");
   call_inst->set_type(callee->type()->GetReturnType());
   return call_inst;
+}
+
+SSAPtr Module::CreateICmpInst(AST::Operator opcode, const SSAPtr &lhs, const SSAPtr &rhs) {
+  DBG_ASSERT(lhs != nullptr, "lhs SSA is null ptr");
+  DBG_ASSERT(rhs != nullptr, "rhs SSA is null ptr");
+
+  SSAPtr icmp_inst, lhs_ssa, rhs_ssa;
+
+  if (lhs->type()->IsConst()) {
+    lhs_ssa = lhs;
+  } else {
+    lhs_ssa = CreateLoad(lhs);
+  }
+
+  if (rhs->type()->IsConst()) {
+    rhs_ssa = rhs;
+  } else {
+    rhs_ssa = CreateLoad(rhs);
+  }
+
+  icmp_inst = AddInst<ICmpInst>(opcode, lhs_ssa, rhs_ssa);
+  DBG_ASSERT(icmp_inst != nullptr, "emit ICmp instruction failed");
+  icmp_inst->set_type(TYPE::MakePrimType(TYPE::Type::Bool, true));
+
+  return icmp_inst;
 }
 
 

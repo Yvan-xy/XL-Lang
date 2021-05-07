@@ -601,7 +601,7 @@ namespace RJIT::front {
 
   ASTPtr Parser::ParseReturn() {
     nextToken();// eat return
-    auto retVal = ParsePrimary();
+    auto retVal = ParseExpression();
 
     auto log = logger();
     ASTPtr retAST = MakeAST<ReturnStmt>(std::move(log), std::move(retVal));

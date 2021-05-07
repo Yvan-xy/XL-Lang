@@ -348,6 +348,8 @@ public:
 
   ASTPtr &getElse() { return _else; }
 
+  bool hasElse() const { return _else != nullptr; }
+
   void Dump(mid::Dumper *) override;
 
   TypeInfoPtr SemAnalyze(mid::analyzer::SemAnalyzer *analyzer) override;

@@ -1,3 +1,4 @@
+#include <define/AST.h>
 #include "ssa.h"
 #include "constant.h"
 #include "idmanager.h"
@@ -207,6 +208,32 @@ CallInst::CallInst(const SSAPtr &callee, const std::vector<SSAPtr> &args, const 
     Instruction(Instruction::OtherOps::Call, args.size() + 1, IB) {
   AddValue(callee);
   for (const auto &it : args) AddValue(it);
+}
+
+ICmpInst::ICmpInst(AST::Operator op, const SSAPtr &lhs, const SSAPtr &rhs, const SSAPtr &IB)
+    : Instruction(Instruction::OtherOps::ICmp, 2, IB), _op(op) {
+  AddValue(lhs);
+  AddValue(rhs);
+}
+
+std::string ICmpInst::opStr() const {
+  std::string  op;
+  switch (_op) {
+
+    case AST::Operator::Equal:    op = "eq";  break;
+    case AST::Operator::NotEqual: op = "ne";  break;
+    case AST::Operator::SLess:    op = "slt"; break;
+    case AST::Operator::ULess:    op = "ult"; break;
+    case AST::Operator::SLessEq:  op = "sle"; break;
+    case AST::Operator::ULessEq:  op = "ule"; break;
+    case AST::Operator::SGreat:   op = "sgt"; break;
+    case AST::Operator::UGreat:   op = "ugt"; break;
+    case AST::Operator::SGreatEq: op = "sge"; break;
+    case AST::Operator::UGreatEq: op = "uge"; break;
+    default: DBG_ASSERT(0, "compare op is error");
+  }
+
+  return op;
 }
 
 /* ---------------------------- Methods of Constant Value ------------------------------- */
@@ -426,7 +453,12 @@ void BranchInst::Dump(std::ostream &os, IdManager &id_mgr) const {
   auto eguard = InExpr();
   auto bguard = InBranch();
   os << xIndent << "br ";
-  DumpValue(os, id_mgr, begin(), end());
+  DumpWithType(os, id_mgr, cond());
+  os << ", label ";
+  DumpValue(os, id_mgr, true_block());
+  os << ", label ";
+  DumpValue(os, id_mgr, false_block());
+  os << std::endl;
 }
 
 void StoreInst::Dump(std::ostream &os, IdManager &id_mgr) const {
@@ -498,5 +530,17 @@ void CallInst::Dump(std::ostream &os, IdManager &id_mgr) const {
 
   os << ")" << std::endl;
 }
+
+void ICmpInst::Dump(std::ostream &os, IdManager &id_mgr) const {
+  if (PrintPrefix(os, id_mgr, this)) return;
+  auto guard = InExpr();
+  os << "icmp " << opStr() << " ";
+  DumpType(os, LHS()->type());
+  os << " ";
+  DumpValue(os, id_mgr, begin(), end());
+  os << std::endl;
+}
+
+
 
 }

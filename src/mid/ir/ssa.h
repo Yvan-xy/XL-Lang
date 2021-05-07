@@ -3,6 +3,7 @@
 
 #include <utility>
 
+#include "define/AST.h"
 #include "mid/ir/usedef/user.h"
 
 namespace RJIT::mid {
@@ -437,6 +438,7 @@ public:
 };
 
 // load from pointer
+// TODO: need extend or trunc for operands
 class LoadInst : public Instruction {
 public:
   LoadInst(const SSAPtr &ptr, const SSAPtr &IB = nullptr)
@@ -474,7 +476,7 @@ public:
   // getter
   const SSAPtr      &func()    const { return _func;  }
   std::size_t       index()    const { return _index; }
-  const std::string arg_name() const { return _arg_name; }
+  std::string arg_name() const { return _arg_name; }
 };
 
 // function call
@@ -490,6 +492,26 @@ public:
 
   // getter/setter
   const SSAPtr & Callee() const { return (*this)[0].get(); }
+};
+
+class ICmpInst : public Instruction {
+private:
+  AST::Operator _op;
+public:
+
+
+  ICmpInst(AST::Operator op, const SSAPtr &lhs, const SSAPtr &rhs, const SSAPtr &IB = nullptr);
+
+  // dump ir
+  void Dump(std::ostream &os, IdManager &id_mgr) const override;
+
+  static unsigned GetNumOperands() { return 2; }
+
+  // getter/setter
+  AST::Operator        op()   const { return _op;              }
+  const SSAPtr       &LHS()   const { return (*this)[0].get(); }
+  const SSAPtr       &RHS()   const { return (*this)[1].get(); }
+  std::string         opStr() const;
 };
 
 }

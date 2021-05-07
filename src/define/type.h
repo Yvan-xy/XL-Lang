@@ -111,8 +111,8 @@ public:
 
   bool IsInteger() const override {
     auto t = static_cast<int>(_type);
-    return t >= static_cast<int>(Type::UInt8) &&
-           t <= static_cast<int>(Type::Int32);
+    return (t >= static_cast<int>(Type::UInt8) &&
+           t <= static_cast<int>(Type::Int32)) || t == static_cast<int>(Type::Bool);
   }
 
   bool IsUnsigned() const override {

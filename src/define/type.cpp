@@ -202,6 +202,7 @@ std::string PrimType::GetTypeId() const {
     case Type::Void:
       return "void";
     case Type::Bool:
+      return "i1";
     case Type::Int8:
       return "i8";
     case Type::Int32:

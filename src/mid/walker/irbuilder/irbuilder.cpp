@@ -155,11 +155,13 @@ SSAPtr IRBuilder::visit(IfElseStmt *node) {
   _module.CreateJump(end_block);
 
   // create else block
-  auto &else_ast = node->getElse();
-  _module.SetInsertPoint(else_block);
-  auto else_ssa = else_ast->CodeGeneAction(this);
-  DBG_ASSERT(else_ssa != nullptr, "emit else block failed");
-  _module.CreateJump(end_block);
+  if (node->hasElse()) {
+    auto &else_ast = node->getElse();
+    _module.SetInsertPoint(else_block);
+    auto else_ssa = else_ast->CodeGeneAction(this);
+    DBG_ASSERT(else_ssa != nullptr, "emit else block failed");
+    _module.CreateJump(end_block);
+  }
 
   // set end_block as the insert point
   _module.SetInsertPoint(end_block);
@@ -183,7 +185,7 @@ SSAPtr IRBuilder::visit(CallStmt *node) {
 
   auto call_inst = _module.CreateCallInst(callee, args);
 
-  return nullptr;
+  return call_inst;
 }
 
 SSAPtr IRBuilder::visit(ProtoTypeAST *node) {

@@ -91,6 +91,8 @@ public:
 
   SSAPtr   CreateCallInst(const SSAPtr &callee, const std::vector<SSAPtr>& args);
 
+  SSAPtr   CreateICmpInst(AST::Operator opcode, const SSAPtr &lhs, const SSAPtr &rhs);
+
   FuncPtr GetFunction(const std::string &func_name);
 
   SSAPtr   GetValues(const std::string &var_name);

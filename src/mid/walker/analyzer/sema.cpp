@@ -229,7 +229,8 @@ namespace RJIT::mid::analyzer {
   TypeInfoPtr SemAnalyzer::visit(IfElseStmt *node) {
     auto cond_type = node->getCondition()->SemAnalyze(this);
     auto then_type = node->getThen()->SemAnalyze(this);
-    auto else_type = node->getElse()->SemAnalyze(this);
+    if (node->hasElse())
+      auto else_type = node->getElse()->SemAnalyze(this);
     return node->set_ast_type(MakeVoid());
   }
 
