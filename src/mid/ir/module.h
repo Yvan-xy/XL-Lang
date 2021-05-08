@@ -124,6 +124,14 @@ public:
   BlockPtr             &FuncEntry()   { return _func_entry;   }
   BlockPtr             &FuncExit()    { return _func_exit;    }
   SSAPtrList::iterator  InsertPos()   { return _insert_pos;   }
+
+  typedef FunctionList::iterator        iterator;
+  typedef FunctionList::const_iterator  const_iterator;
+
+  iterator              begin()       { return _functions.begin(); }
+  iterator              end()         { return _functions.end();   }
+  const_iterator        begin() const { return _functions.begin(); }
+  const_iterator        end()   const { return _functions.end();   }
 };
 
 

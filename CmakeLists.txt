@@ -32,7 +32,7 @@ add_subdirectory("${RJIT_SOURCE_DIR}/lib")
 add_subdirectory("${RJIT_SOURCE_DIR}/opt")
 
 
-add_executable(xycc main.cpp)
+add_executable(xycc main.cpp link.cpp)
 target_link_libraries(xycc
         RJIT::front
         RJIT::mid

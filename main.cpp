@@ -5,12 +5,14 @@
 
 #include "front/lexer.h"
 #include "front/parser.h"
+#include "opt/pass_manager.h"
 #include "mid/walker/analyzer/sema.h"
 #include "mid/walker/irbuilder/irbuilder.h"
 
 using namespace RJIT::front;
 using namespace RJIT::mid;
 using namespace RJIT::mid::analyzer;
+using namespace RJIT::opt;
 
 int main(int argc, char *argv[]) {
   Lexer lexer("a.xy");
@@ -25,7 +27,11 @@ int main(int argc, char *argv[]) {
   IRBuilder irBuilder(parser.ast());
 
   irBuilder.EmitIR();
-  irBuilder.module().Dump(std::cout);
+//  irBuilder.module().Dump(std::cout);
+
+  PassManager::Initialize();
+  PassManager::SetModule(irBuilder.module());
+  PassManager::RunPasses();
 
 //
 //    RJIT::lib::Nested::NestedMapPtr<int, int *> ptr = MakeNestedMap<int, int *>();
