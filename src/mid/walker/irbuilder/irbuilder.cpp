@@ -111,7 +111,7 @@ SSAPtr IRBuilder::visit(CompoundStmt *node) {
 
   // create new block
   const auto &cur_func = _module.InsertPoint()->parent();
-  auto block = _module.CreateBlock(cur_func, (set_name ? "body" : ""));
+  auto block = _module.CreateBlock(cur_func, (set_name ? "body" : "block"));
   _module.CreateJump(block);
   _module.SetInsertPoint(block);
   for (const auto &it : node->stmts()) {
@@ -137,7 +137,7 @@ SSAPtr IRBuilder::visit(IfElseStmt *node) {
   // create condition block
   auto &cond = node->getCondition();
   auto cond_block = cond->CodeGeneAction(this);
-  auto then_block = _module.CreateBlock(func, "if_then");
+  auto then_block = _module.CreateBlock(func, "if.then");
   auto else_block = _module.CreateBlock(func, "if.else");
 
   auto cond_ssa = cond->CodeGeneAction(this);
@@ -280,7 +280,44 @@ SSAPtr IRBuilder::visit(PrimTypeAST *node) {
   return nullptr;
 }
 
+
+// create while block
+/*
+ *          |-----> cond --------|
+ *          |        |           |
+ *          |    loop_body       |
+ *          |        |           |
+ *          |--- true_block      |
+ *                               |
+ *               loop_end <------|
+ *
+ */
 SSAPtr IRBuilder::visit(WhileStmt *node) {
+  auto context = _module.SetContext(node->Logger());
+  auto cur_insert = _module.InsertPoint();  // save current insert point
+  auto func = cur_insert->parent();
+
+  // create while blocks
+  auto cond_block = _module.CreateBlock(func, "while.cond");
+  auto loop_body = _module.CreateBlock(func, "loop.body");
+  auto while_end = _module.CreateBlock(func, "while.end");
+
+  // TODO: handle break/continue
+  _module.CreateJump(cond_block);
+  _module.SetInsertPoint(cond_block);
+  auto cond = node->getCondition()->CodeGeneAction(this);
+  DBG_ASSERT(cond != nullptr, "while condition SSA is nullptr");
+
+  _module.CreateBranch(cond, loop_body, while_end);
+
+  // emit loop body
+  _module.SetInsertPoint(loop_body);
+  auto body = node->getBlock()->CodeGeneAction(this);
+  DBG_ASSERT(body != nullptr, "while body SSA is nullptr");
+  _module.CreateJump(cond_block);
+
+  _module.SetInsertPoint(while_end);
+
   return nullptr;
 }
 

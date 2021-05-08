@@ -329,6 +329,30 @@ inline void DumpValue(std::ostream &os, IdManager &id_mgr, It begin, It end) {
   }
 }
 
+inline void DumpBlockName(std::ostream &os, IdManager &id_mgr, const BasicBlock *block) {
+  auto &npos =  std::string::npos;
+  auto name = block->name();
+  if (name.find("if_cond") != npos) {
+    os << name << id_mgr.GetId(block, IdType::_ID_IF_COND);
+  } else if (name.find("if.then") != npos) {
+    os << name << id_mgr.GetId(block, IdType::_ID_THEN);
+  } else if (name.find("if.else") != npos) {
+    os << name << id_mgr.GetId(block, IdType::_ID_ELSE);
+  } else if (name.find("if.end") != npos) {
+    os << name << id_mgr.GetId(block, IdType::_ID_IF_END);
+  } else if (name.find("while.cond") != npos) {
+    os << name << id_mgr.GetId(block, IdType::_ID_WHILE_COND);
+  } else if (name.find("loop.body") != npos) {
+    os << name << id_mgr.GetId(block, IdType::_ID_LOOP_BODY);
+  } else if (name.find("while.end") != npos) {
+    os << name << id_mgr.GetId(block, IdType::_ID_WHILE_END);
+  } else if (name.find("block") != npos){
+    os << name << id_mgr.GetId(block, IdType::_ID_BLOCK);
+  } else {
+    os << name;
+  }
+}
+
 void PrintId(std::ostream &os, IdManager &id_mgr, const Value *value) {
   os << "%" << id_mgr.GetId(value);
 }
@@ -374,7 +398,7 @@ void BinaryOperator::Dump(std::ostream &os, IdManager &id_mgr) const {
 void BasicBlock::Dump(std::ostream &os, IdManager &id_mgr) const {
   if (!_name.empty()){
     if (in_branch) os << "%"; // add '%' if in branch instructions
-    os << _name;
+    DumpBlockName(os, id_mgr, this);
   } else {
     PrintId(os, id_mgr, this);
   }

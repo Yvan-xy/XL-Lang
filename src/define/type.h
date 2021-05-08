@@ -209,9 +209,9 @@ public:
     return type->GetType() == typeInfo->GetType();
   }
 
-  bool IsNotShortThan(const TypeInfoPtr &type) override {
-    DBG_ASSERT(type->IsPrime(), "can't compare with non-prime type");
-    return type->GetType() >= type->GetType();
+  bool IsNotShortThan(const TypeInfoPtr &typeInfo) override {
+    DBG_ASSERT(typeInfo->IsPrime(), "can't compare with non-prime type");
+    return type->GetType() >= typeInfo->GetType();
   }
 };
 
@@ -259,8 +259,8 @@ private:
   TypeInfoPtr _base;
   bool _is_right;
 public:
-  PointerType(const TypeInfoPtr &base, bool is_right)
-      : _base(base), _is_right(is_right) {}
+  PointerType(TypeInfoPtr base, bool is_right)
+      : _base(std::move(base)), _is_right(is_right) {}
 
   bool IsRightValue() const override { return _is_right; }
   bool IsVoid()       const override { return false;     }

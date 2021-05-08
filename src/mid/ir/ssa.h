@@ -31,13 +31,11 @@ public:
   void AddInstBefore(const SSAPtr &insertBefore, const SSAPtr &inst);
 
   //getters
-  SSAPtrList &insts() { return _insts; }
-
-  const UserPtr &parent() const { return _parent; }
-
-  SSAPtrList::iterator inst_begin() { return _insts.begin(); }
-
-  SSAPtrList::iterator inst_end() { return _insts.end(); }
+  SSAPtrList          &insts()        { return _insts;         }
+  SSAPtrList::iterator inst_begin()   { return _insts.begin(); }
+  SSAPtrList::iterator inst_end()     { return _insts.end();   }
+  const UserPtr       &parent() const { return _parent;        }
+  const std::string   &name()   const { return _name;          }
 };
 
 class Instruction : public User {

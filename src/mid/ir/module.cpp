@@ -62,7 +62,7 @@ SSAPtr Module::GetValues(const std::string &var_name) {
 }
 
 BlockPtr Module::CreateBlock(const UserPtr &parent) {
-  return CreateBlock(parent, "");
+  return CreateBlock(parent, "block");
 }
 
 BlockPtr Module::CreateBlock(const UserPtr &parent, const std::string &name) {
@@ -318,17 +318,16 @@ SSAPtr Module::CreateConstInt(unsigned int value) {
 }
 
 SSAPtr Module::CreateCallInst(const SSAPtr &callee, const std::vector<SSAPtr>& args) {
-  using BinaryOps = Instruction::BinaryOps;
   std::vector<SSAPtr> new_args;
   for (const auto &it : args) {
     bool is_bin = false;
     if (it->isInstruction()) {
       auto inst = std::static_pointer_cast<Instruction>(it);
-      if (inst->opcode() >= BinaryOps::BinaryOpsBegin &&
-          inst->opcode() < BinaryOps::BinaryOpsEnd) {
+      if (inst->isBinaryOp()) {
         is_bin = true;
       }
     }
+
     if (it->type()->IsConst() || is_bin) {
       new_args.push_back(it);
     } else {
@@ -349,14 +348,29 @@ SSAPtr Module::CreateICmpInst(AST::Operator opcode, const SSAPtr &lhs, const SSA
   DBG_ASSERT(rhs != nullptr, "rhs SSA is null ptr");
 
   SSAPtr icmp_inst, lhs_ssa, rhs_ssa;
+  bool is_lhs_bin = false, is_rhs_bin = false;
 
-  if (lhs->type()->IsConst()) {
+  if (lhs->isInstruction()) {
+    auto lhs_inst = std::static_pointer_cast<Instruction>(lhs);
+    if (lhs_inst->isBinaryOp()) {
+      is_lhs_bin = true;
+    }
+  }
+
+  if (rhs->isInstruction()) {
+    auto rhs_inst = std::static_pointer_cast<Instruction>(rhs);
+    if (rhs_inst->isBinaryOp()) {
+      is_rhs_bin = true;
+    }
+  }
+
+  if (lhs->type()->IsConst() || is_lhs_bin) {
     lhs_ssa = lhs;
   } else {
     lhs_ssa = CreateLoad(lhs);
   }
 
-  if (rhs->type()->IsConst()) {
+  if (rhs->type()->IsConst() || is_rhs_bin) {
     rhs_ssa = rhs;
   } else {
     rhs_ssa = CreateLoad(rhs);
