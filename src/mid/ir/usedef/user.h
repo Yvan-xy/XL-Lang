@@ -25,7 +25,7 @@ public:
     }
   }
 
-  unsigned operandNum() const { return _operands_num; }
+  unsigned operandNum() const { return _operands.size(); }
 
   virtual SSAPtr GetOperand(unsigned i) const {
     DBG_ASSERT(i < _operands_num, "getOperand() out of range");
@@ -56,6 +56,7 @@ public:
 
   // access value in current user
   Use &operator[](std::size_t pos) {
+    if(_operands_num == 0) { _operands_num = _operands.size(); }
     DBG_ASSERT(pos < _operands_num, "position out of range");
     return _operands[pos];
   }

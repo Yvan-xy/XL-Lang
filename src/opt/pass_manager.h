@@ -4,6 +4,7 @@
 #include <map>
 #include <string_view>
 #include <unordered_set>
+#include <utility>
 
 #include "opt/pass.h"
 #include "mid/ir/module.h"
@@ -17,10 +18,10 @@ using PassInfoPtr     = std::shared_ptr<PassInfo>;
 using PassFactoryPtr  = std::shared_ptr<PassFactory>;
 using PassPtrList     = std::vector<PassInfoPtr>;
 using PassFactoryList = std::vector<PassFactoryPtr>;
-using PassNameList    = std::vector<std::string_view>;
-using PassInfoMap     = std::map<std::string_view, PassInfoPtr>;
-using PassNameSet     = std::unordered_set<std::string_view>;
-using RequirementMap  = std::unordered_map<std::string_view, PassNameSet>;
+using PassNameList    = std::vector<std::string>;
+using PassInfoMap     = std::unordered_map<std::string, PassInfoPtr>;
+using PassNameSet     = std::unordered_set<std::string>;
+using RequirementMap  = std::unordered_map<std::string, PassNameSet>;
 
 // pass factory
 class PassFactory {
@@ -41,17 +42,17 @@ private:
   PassNameList  _invalidated_passes;
 
 public:
-  PassInfo(PassPtr pass, std::string_view name, bool is_analysis, std::size_t min_opt_level)
-      : _pass(std::move(pass)), _pass_name(name), _is_analysis(is_analysis),
+  PassInfo(PassPtr pass, std::string name, bool is_analysis, std::size_t min_opt_level)
+      : _pass(std::move(pass)), _pass_name(std::move(name)), _is_analysis(is_analysis),
         _min_opt_level(min_opt_level) {}
 
   // add required pass by name for current pass
   // all required passes should be run before running current pass
-  PassInfo &Requires(std::string_view pass_name);
+  PassInfo &Requires(const std::string &pass_name);
 
   // add invalidated pass by name for current pass
   // all invalidated passes should be run again after running current pass
-  PassInfo &Invalidates(std::string_view pass_name);
+  PassInfo &Invalidates(const std::string &pass_name);
 
   // setters
   // set if current pass is an analysis pass
@@ -109,13 +110,13 @@ public:
 
   static PassPtrList &Candidates() { return _instance._candidates; }
 
-  static void RequiredBy(std::string_view slave, std::string_view master);
+  static void RequiredBy(const std::string &slave, const std::string &master);
 
   // run required passes
   static bool RunRequiredPasses(PassNameSet &valid, const PassInfoPtr &info);
 
   // invalidate the specific pass
-  static void InvalidatePass(PassNameSet &valid, std::string_view name);
+  static void InvalidatePass(PassNameSet &valid, const std::string &name);
 
   // register pass
   static void RegisterPassFactory(const PassFactoryPtr &factory) {

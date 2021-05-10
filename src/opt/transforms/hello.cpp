@@ -29,6 +29,6 @@ public:
   }
 };
 
-static PassRegisterFactory<HelloPassFactory> registry;
+//static PassRegisterFactory<HelloPassFactory> registry;
 
 }

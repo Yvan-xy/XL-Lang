@@ -27,11 +27,11 @@ int main(int argc, char *argv[]) {
   IRBuilder irBuilder(parser.ast());
 
   irBuilder.EmitIR();
-//  irBuilder.module().Dump(std::cout);
 
   PassManager::Initialize();
   PassManager::SetModule(irBuilder.module());
   PassManager::RunPasses();
+  irBuilder.module().Dump(std::cout);
 
 //
 //    RJIT::lib::Nested::NestedMapPtr<int, int *> ptr = MakeNestedMap<int, int *>();
@@ -41,6 +41,7 @@ int main(int argc, char *argv[]) {
 //        std::cout << "value: " << *value << std::endl;
 //        ptr->AddItem(i, value);
 //    }
+
 //    for (int i = 1; i < 10; i++) {
 ////        auto v = ptr->GetItem(i, true);
 //        auto v = ptr->GetItem(i, true);

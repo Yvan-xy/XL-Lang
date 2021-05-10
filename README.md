@@ -16,9 +16,9 @@ func_param  ::= ident prime_type
 block       ::= '{' block_items '}'
 block_items ::= declation | stmt
 
-stmt ::= lval '=' expr ';' | [expr]';' | block 
-       | if_stmt 
-       | while_stmt
+stmt        ::= lval '=' expr ';' | [expr]';' | block 
+              | if_stmt 
+              | while_stmt
 
 if_stmt     ::= 'if' cond stmt ['else' stmt] 
 while_stmt  ::= 'while' cond stmt

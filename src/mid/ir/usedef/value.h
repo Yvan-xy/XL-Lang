@@ -30,6 +30,7 @@ using InstPtr       = std::shared_ptr<Instruction>;
 using BlockPtr      = std::shared_ptr<BasicBlock>;
 using BinaryPtr     = std::shared_ptr<BinaryOperator>;
 using GlobalVarPtr  = std::shared_ptr<GlobalVariable>;
+using Blocks        = std::vector<BlockPtr>;
 
 class Value {
 private:
@@ -52,6 +53,14 @@ public:
 
   virtual const BlockPtr &GetParent() const { return _parent; }
   virtual void SetParent(const BlockPtr &BB) { _parent = BB; }
+
+  void ReplaceBy(const SSAPtr &value) {
+    if (value.get() == this) return;
+    // reroute all uses to new value
+    while (!_use_list.empty()) {
+      _use_list.front()->set(value);
+    }
+  }
 
   // dump the content of SSA value to output stream
   virtual void Dump(std::ostream &os, IdManager &id_mgr) const = 0;

@@ -12,7 +12,9 @@ class BasicBlock : public User {
 private:
   SSAPtrList _insts;
   std::string _name;    // block name
-  UserPtr _parent;  // block's parent(function)
+  UserPtr     _parent;  // block's parent(function)
+  Blocks      _preds;   // predecessors
+  Blocks      _succs;   // successors
 
 public:
 
@@ -30,12 +32,20 @@ public:
 
   void AddInstBefore(const SSAPtr &insertBefore, const SSAPtr &inst);
 
+  void AddPredecessor(const BlockPtr &pred) { _preds.push_back(pred); }
+  void AddSuccessor(const BlockPtr &succ)   { _succs.push_back(succ); }
+
   //getters
   SSAPtrList          &insts()        { return _insts;         }
   SSAPtrList::iterator inst_begin()   { return _insts.begin(); }
   SSAPtrList::iterator inst_end()     { return _insts.end();   }
   const UserPtr       &parent() const { return _parent;        }
   const std::string   &name()   const { return _name;          }
+
+  Blocks              &preds()        { return _preds;         }
+  Blocks              &succs()        { return _succs;         }
+  Blocks::iterator     pred_begin()   { return _preds.begin(); }
+  Blocks::iterator     pred_end()     { return _preds.end();   }
 };
 
 class Instruction : public User {

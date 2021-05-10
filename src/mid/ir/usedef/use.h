@@ -16,8 +16,8 @@ class Value;
 using UseList    = std::list<Use *>;
 using Operands   = std::vector<Use>;
 using SSAPtr     = std::shared_ptr<Value>;
-using SSAPtrList = std::list<SSAPtr>;
 using UserPtr    = std::shared_ptr<User>;
+using SSAPtrList = std::list<SSAPtr>;
 
 class Use {
 private:

@@ -73,6 +73,7 @@ public:
 class FunctionPass : public Pass {
 public:
   FunctionPass() = default;
+  virtual ~FunctionPass() = default;
 
   bool IsBlockPass()    const final { return false; }
   bool IsModulePass()   const final { return false; }

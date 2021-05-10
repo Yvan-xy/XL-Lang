@@ -5,19 +5,19 @@ namespace RJIT::opt {
 
 PassManager PassManager::_instance;
 
-PassInfo &PassInfo::Requires(std::string_view pass_name) {
+PassInfo &PassInfo::Requires(const std::string &pass_name) {
   _required_passes.push_back(pass_name);
   PassManager::RequiredBy(pass_name, _pass_name);
   return *this;
 }
 
-PassInfo &PassInfo::Invalidates(std::string_view pass_name) {
+PassInfo &PassInfo::Invalidates(const std::string &pass_name) {
   _invalidated_passes.push_back(pass_name);
   return *this;
 }
 
 
-void PassManager::RequiredBy(std::string_view slave, std::string_view master) {
+void PassManager::RequiredBy(const std::string &slave, const std::string &master) {
     GetRequiredBy()[slave].insert(master);
 }
 
@@ -96,7 +96,7 @@ bool PassManager::RunRequiredPasses(PassNameSet &valid, const PassInfoPtr &info)
   return changed;
 }
 
-void PassManager::InvalidatePass(PassNameSet &valid, std::string_view name) {
+void PassManager::InvalidatePass(PassNameSet &valid, const std::string &name) {
   // return if this pass is already erased from valid
   if (!valid.erase(name)) return;
 
@@ -120,7 +120,8 @@ void PassManager::init() {
   for (const auto &it : _factories) {
     auto pass = it->CreatePass(this);
     auto pass_name = pass->name();
-    _pass_infos.insert({pass_name, pass});
+    DBG_ASSERT(_pass_infos.find(pass_name) == _pass_infos.end(), "pass %s has been registered", pass_name.c_str());
+    _pass_infos.insert(std::make_pair(pass_name, pass));
   }
 }
 

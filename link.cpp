@@ -2,4 +2,10 @@
 
 // make sure rule linked to executable
 extern int HelloXY;
-int HelloLinked = HelloXY;
+extern int BlockCalculate;
+extern int BlockMerge;
+
+int HelloLinked          = HelloXY;
+int BlockCalculateLinked = BlockCalculate;
+int BlockMergeLinked     = BlockMerge;
+
