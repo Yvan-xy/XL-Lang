@@ -67,12 +67,12 @@ public:
 
   void MergeBlocks(const BlockPtr &pred, const BlockPtr &succ) {
 
-    auto insts = pred->insts();
+    auto &insts = pred->insts();
     // remove jump instruction
     insts.pop_back();
 
     // move successor's instructions into predecessor
-    pred->insts().insert(pred->inst_end(), succ->inst_begin(), succ->inst_end());
+    insts.insert(pred->inst_end(), succ->inst_begin(), succ->inst_end());
 
     // remove successor from predecessor
     pred->succs().clear();
