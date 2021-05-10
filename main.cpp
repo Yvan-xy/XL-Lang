@@ -15,7 +15,8 @@ using namespace RJIT::mid::analyzer;
 using namespace RJIT::opt;
 
 int main(int argc, char *argv[]) {
-  Lexer lexer("a.xy");
+  std::string file = argv[1];
+  Lexer lexer(file);
   Parser parser(&lexer);
   parser.Parse();
 
