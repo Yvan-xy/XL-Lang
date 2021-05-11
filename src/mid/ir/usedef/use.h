@@ -29,6 +29,14 @@ public:
     if (V) addToList(V);
   }
 
+  // copy constructor
+  Use(const Use &use) : _value(use._value), _user(use._user) {
+    if (_value) addToList(_value);
+  }
+
+  // move constructor
+  Use(Use &&use) noexcept;
+
   ~Use() { if (_value) removeFromList(_value); }
 
   void removeFromList(const SSAPtr &V);
@@ -43,7 +51,7 @@ public:
 
   const SSAPtr &get() const { return _value; }
 
-  User *getUser() const { return _user; }
+  User *getUser() { return _user; }
 
   SSAPtr operator->() { return _value; }
 

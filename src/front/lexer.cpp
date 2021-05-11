@@ -98,15 +98,13 @@ namespace RJIT::front {
 
       bool isChar = false, isString = false;
 
-      /* Check if >=, <=, ==, != */
-      if (ch == '=' || ch == '>' || ch == '<' || ch == '!'
-          || ch == '+' || ch == '-' || ch == '*' || ch == '/') {
+      /* Check if >=, <=, ==, !=, ||, &&*/
+      if (ch == '=' || ch == '>' || ch == '<' || ch == '!' ||
+          ch == '+' || ch == '-' || ch == '*' || ch == '/' ||
+          ch == '|' || ch == '&') {
         eat = false;
         nextChar();
-        if (ch == '=') {
-          value += ch;
-          eat = true;
-        } else if (ch == '+' || ch == '-') {
+        if (ch == '=' || ch == '+' || ch == '-' || ch == '|' || ch == '&') {
           value += ch;
           eat = true;
         }

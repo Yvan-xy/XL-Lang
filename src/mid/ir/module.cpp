@@ -81,7 +81,7 @@ SSAPtr Module::CreateJump(const BlockPtr &target) {
   jump->set_type(nullptr);
 
   // add the use to predecessor
-  target->AddValue(std::static_pointer_cast<Value>(_insert_point));
+  target->AddValue(_insert_point);
   return jump;
 }
 
@@ -219,23 +219,10 @@ static unsigned OpToOpcode(AST::Operator op) {
 
 // S1 = S2;
 SSAPtr Module::CreateAssign(const SSAPtr &S1, const SSAPtr &S2) {
-  using BinaryOps = Instruction::BinaryOps;
-  using OtherOps = Instruction::OtherOps;
-  bool is_bin = false, is_call = false;
   std::shared_ptr<Instruction> inst;
 
-  // check if S2 is binary operator
-  if (S2->isInstruction()) {
-    inst = std::static_pointer_cast<Instruction>(S2);
-    if (inst->opcode() >= BinaryOps::BinaryOpsBegin &&
-        inst->opcode() < BinaryOps::BinaryOpsEnd) {
-      is_bin = true;
-    }
 
-    if (inst->opcode() == OtherOps::Call) is_call = true;
-  }
-
-  if (S2->type()->IsConst() || is_bin || is_call) {
+  if (S2->type()->IsConst() || IsBinaryOperator(S2) || IsCallInst(S2)) {
     // S1 = C ---> store C, s1
     auto store_inst = AddInst<StoreInst>(S2, S1);
     DBG_ASSERT(store_inst != nullptr, "emit store inst failed");
@@ -256,12 +243,12 @@ SSAPtr Module::CreatePureBinaryInst(Instruction::BinaryOps opcode,
   DBG_ASSERT(opcode >= Instruction::BinaryOps::Add, "opcode is not pure binary operator");
   SSAPtr load_s1 = nullptr;
   SSAPtr load_s2 = nullptr;
-  if (!S1->type()->IsConst()) {
+  if (!S1->type()->IsConst() && !IsBinaryOperator(S1) && !IsCallInst(S1)) {
     load_s1 = CreateLoad(S1);
     DBG_ASSERT(load_s1 != nullptr, "emit load S1 failed");
   }
 
-  if (!S2->type()->IsConst()) {
+  if (!S2->type()->IsConst() && !IsBinaryOperator(S2) && !IsCallInst(S2)) {
     load_s2 = CreateLoad(S2);
     DBG_ASSERT(load_s1 != nullptr, "emit load S2 failed");
   }
@@ -320,15 +307,8 @@ SSAPtr Module::CreateConstInt(unsigned int value) {
 SSAPtr Module::CreateCallInst(const SSAPtr &callee, const std::vector<SSAPtr>& args) {
   std::vector<SSAPtr> new_args;
   for (const auto &it : args) {
-    bool is_bin = false;
-    if (it->isInstruction()) {
-      auto inst = std::static_pointer_cast<Instruction>(it);
-      if (inst->isBinaryOp()) {
-        is_bin = true;
-      }
-    }
 
-    if (it->type()->IsConst() || is_bin) {
+    if (it->type()->IsConst() || IsBinaryOperator(it) || IsCallInst(it)) {
       new_args.push_back(it);
     } else {
       auto load_inst = CreateLoad(it);

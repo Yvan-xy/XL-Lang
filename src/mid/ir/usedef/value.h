@@ -62,6 +62,8 @@ public:
     }
   }
 
+  void RemoveFromUser();
+
   // dump the content of SSA value to output stream
   virtual void Dump(std::ostream &os, IdManager &id_mgr) const = 0;
 

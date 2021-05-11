@@ -1,5 +1,6 @@
 #include <define/AST.h>
 #include "ssa.h"
+#include "castssa.h"
 #include "constant.h"
 #include "idmanager.h"
 #include "lib/guard.h"
@@ -289,6 +290,27 @@ SSAPtr GetAllOneValue(TYPE::Type type) {
   return allOne;
 }
 
+bool IsCallInst(const SSAPtr &ptr) {
+  if (ptr->isInstruction()) {
+    auto inst = CastTo<Instruction>(ptr);
+    if (inst->opcode() == Instruction::OtherOps::Call) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool IsBinaryOperator(const SSAPtr &ptr){
+  if (ptr->isInstruction()) {
+    auto inst = CastTo<Instruction>(ptr);
+    if (inst->isBinaryOp() || inst->opcode() == Instruction::OtherOps::ICmp) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
 /* ---------------------------- Methods of dumping IR ------------------------------- */
 
 const char *xIndent = "  ";
@@ -446,13 +468,14 @@ void Function::Dump(std::ostream &os, IdManager &id_mgr) const {
   os << ") {\n";
 
   // dump content of blocks
-  std::size_t idx = 0;
-  for (const auto &it : *this) {
-    DumpValue(os, id_mgr, it);
+  for (std::size_t i = 0; i < this->size(); i++) {
+    if (i == 1) continue;
+    DumpValue(os, id_mgr, (*this)[i]);
     // end of block
-    os << "\n";
-    if (idx++ != size() - 1) os << std::endl;
+    os << "\n" << std::endl;
   }
+  DumpValue(os, id_mgr, (*this)[1]);
+  os << std::endl;
 
   // end of function
   os << "}\n" << std::endl;
@@ -463,6 +486,7 @@ void JumpInst::Dump(std::ostream &os, IdManager &id_mgr) const {
   auto bguard = InBranch();
   os << xIndent << "br label ";
   DumpValue(os, id_mgr, target());
+  os << std::endl;
 }
 
 void ReturnInst::Dump(std::ostream &os, IdManager &id_mgr) const {

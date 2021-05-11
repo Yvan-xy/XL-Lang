@@ -71,24 +71,23 @@ SSAPtr IRBuilder::visit(ReturnStmt *node) {
   auto context = _module.SetContext(node->Logger());
   if (!node->hasReturnVal()) return nullptr;
 
+  // create a new block
+  const auto &func = _module.InsertPoint()->parent();
+  auto new_block = _module.CreateBlock(func);
+
   // generate return value
   auto retval = node->getReturn()->CodeGeneAction(this);
   DBG_ASSERT(retval != nullptr, "emit return value failed");
-
-  // save current insert point
-  auto cur_insert = _module.InsertPoint();
-
-  // store value to retval
-  auto func_exit = _module.FuncExit();
-  _module.SetInsertPoint(func_exit, func_exit->inst_end());
 
   // copy return value
   auto store_inst = _module.CreateAssign(_module.ReturnValue(), retval);
   DBG_ASSERT(store_inst != nullptr, "copy return value failed");
 
-  // recover insert point
-  _module.SetInsertPoint(cur_insert);
+  auto jump_inst = _module.CreateJump(_module.FuncExit());
+  DBG_ASSERT(jump_inst != nullptr, "emit jump instruction failed");
 
+  // set insert point at new block
+  _module.SetInsertPoint(new_block);
   return nullptr;
 }
 
@@ -155,13 +154,13 @@ SSAPtr IRBuilder::visit(IfElseStmt *node) {
   _module.CreateJump(end_block);
 
   // create else block
+  _module.SetInsertPoint(else_block);
   if (node->hasElse()) {
     auto &else_ast = node->getElse();
-    _module.SetInsertPoint(else_block);
     auto else_ssa = else_ast->CodeGeneAction(this);
     DBG_ASSERT(else_ssa != nullptr, "emit else block failed");
-    _module.CreateJump(end_block);
   }
+  _module.CreateJump(end_block);
 
   // set end_block as the insert point
   _module.SetInsertPoint(end_block);

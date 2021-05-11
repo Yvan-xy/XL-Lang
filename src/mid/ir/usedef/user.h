@@ -39,7 +39,7 @@ public:
 
   void AddValue(const SSAPtr &V) {
     DBG_ASSERT((_operands.size() < _operands_num) || ( _operands_num == 0), " out of range");
-    _operands.emplace_back(V, this);
+    _operands.push_back(Use(V, this));
   }
 
   void RemoveValue(const SSAPtr& V) {

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 
 #include "opt/pass.h"
 #include "lib/debug.h"
@@ -47,6 +48,18 @@ public:
           it.set(nullptr);
         }
       }
+
+      // delete unreachable block
+      if (block->preds().empty() && block != entry) {
+        for (auto &succ : block->succs()) {
+          auto &s_preds = succ->preds();
+          s_preds.erase(std::remove_if(s_preds.begin(), s_preds.end(),
+            [&block](const BlockPtr &B) {
+              return B == block;
+            }), s_preds.end());
+        }
+        it.set(nullptr);
+      }
     }
 
     // remove all useless blocks
@@ -71,6 +84,7 @@ public:
     // remove jump instruction
     insts.pop_back();
 
+
     // move successor's instructions into predecessor
     insts.insert(pred->inst_end(), succ->inst_begin(), succ->inst_end());
 
@@ -80,7 +94,23 @@ public:
     // add succ's successors into pred
     for (const auto &it : succ->succs()) {
       pred->succs().push_back(it);
+
+      // erase current succ from its successors
+      auto &preds = it->preds();
+      if (!preds.empty()) {
+        for (auto block = preds.begin(); block != preds.end(); block++)  {
+          if (*block == succ) {
+            block = preds.erase(block);
+            break;
+          }
+        }
+      }
+
+      // add new pred to succ's successors
+      it->preds().push_back(pred);
     }
+    succ->preds().clear();
+    succ->succs().clear();
   }
 };
 
@@ -95,6 +125,5 @@ public:
 };
 
 static PassRegisterFactory<BlockMergeFactory> registry;
-
 
 }

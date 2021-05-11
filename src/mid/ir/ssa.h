@@ -10,7 +10,7 @@ namespace RJIT::mid {
 
 class BasicBlock : public User {
 private:
-  SSAPtrList _insts;
+  SSAPtrList  _insts;
   std::string _name;    // block name
   UserPtr     _parent;  // block's parent(function)
   Blocks      _preds;   // predecessors
@@ -521,6 +521,9 @@ public:
   const SSAPtr       &RHS()   const { return (*this)[1].get(); }
   std::string         opStr() const;
 };
+
+bool IsCallInst(const SSAPtr &ptr);
+bool IsBinaryOperator(const SSAPtr &ptr);
 
 }
 #endif //RJIT_SSA_H

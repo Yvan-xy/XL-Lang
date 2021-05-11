@@ -2,6 +2,7 @@
 
 #include "opt/pass.h"
 #include "lib/debug.h"
+#include "mid/ir/castssa.h"
 #include "opt/pass_manager.h"
 
 int BlockCalculate;
@@ -14,6 +15,16 @@ namespace RJIT::opt {
 class BlockCalculate : public FunctionPass {
 public:
   bool runOnFunction(const FuncPtr &F) final {
+
+    for (const auto &it : *F) {
+      auto block = std::static_pointer_cast<BasicBlock>(it.get());
+      DBG_ASSERT(block != nullptr, "cast to block failed");
+
+      // clear existed result
+      block->preds().clear();
+      block->succs().clear();
+    }
+
     for (const auto &it : *F) {
       auto block = std::static_pointer_cast<BasicBlock>(it.get());
       DBG_ASSERT(block != nullptr, "cast to block failed");
@@ -41,8 +52,10 @@ public:
         block->AddSuccessor(false_block);
         true_block->AddPredecessor(block);
         false_block->AddPredecessor(block);
-      } else {
-//        TRACE("Get function return\n");
+      } else if (opcode == Instruction::TermOps::Ret){
+//        auto exit = CastTo<BasicBlock>((*F)[1].get());
+//        exit->AddPredecessor(block);
+//        block->AddSuccessor(exit);
       }
     }
     return false;

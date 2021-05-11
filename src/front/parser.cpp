@@ -114,8 +114,6 @@ namespace RJIT::front {
   bool Parser::isEqualSign() {
     if (curToken.isOper() && curToken.getOperValue() == "=") {
       return true;
-    } else if (curToken.isOper() && curToken.getOperValue().length() > 1) {
-      if (curToken.getOperValue()[1] == '=') return true;
     }
     return false;
   }
