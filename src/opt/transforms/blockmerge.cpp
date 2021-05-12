@@ -37,9 +37,14 @@ public:
       if (entry == nullptr) entry = it.get();
       auto block = CastTo<BasicBlock>(it.get());
 
-      if (block->preds().size() == 1) {
-        auto pred = *(block->preds().begin());
-        if (pred->succs().size() == 1) {
+      // check if have only one predecessor
+      if (block->size() == 1) {
+        auto pred = CastTo<BasicBlock>((*block)[0].get());
+        auto inst = *(--pred->inst_end());
+        auto branch_inst = CastTo<Instruction>(inst);
+
+        if (branch_inst->opcode() == Instruction::TermOps::Ret ||
+            branch_inst->opcode() == Instruction::TermOps::Jmp) {
           _changed = true;
 
           // merge two blocks
@@ -50,15 +55,9 @@ public:
       }
 
       // delete unreachable block
-      if (block->preds().empty() && block != entry) {
-        for (auto &succ : block->succs()) {
-          auto &s_preds = succ->preds();
-          s_preds.erase(std::remove_if(s_preds.begin(), s_preds.end(),
-            [&block](const BlockPtr &B) {
-              return B == block;
-            }), s_preds.end());
-        }
+      if (block->empty() && block != entry) {
         it.set(nullptr);
+        block->RemoveFromUser();
       }
     }
 
@@ -84,33 +83,9 @@ public:
     // remove jump instruction
     insts.pop_back();
 
-
     // move successor's instructions into predecessor
     insts.insert(pred->inst_end(), succ->inst_begin(), succ->inst_end());
 
-    // remove successor from predecessor
-    pred->succs().clear();
-
-    // add succ's successors into pred
-    for (const auto &it : succ->succs()) {
-      pred->succs().push_back(it);
-
-      // erase current succ from its successors
-      auto &preds = it->preds();
-      if (!preds.empty()) {
-        for (auto block = preds.begin(); block != preds.end(); block++)  {
-          if (*block == succ) {
-            block = preds.erase(block);
-            break;
-          }
-        }
-      }
-
-      // add new pred to succ's successors
-      it->preds().push_back(pred);
-    }
-    succ->preds().clear();
-    succ->succs().clear();
   }
 };
 
@@ -119,7 +94,6 @@ public:
   PassInfoPtr CreatePass(PassManager *) override {
     auto pass = std::make_shared<BlockMerge>();
     auto passinfo =  std::make_shared<PassInfo>(pass, "BlockMerge", false, false);
-    passinfo->Requires("BlockCalculate");
     return passinfo;
   }
 };
