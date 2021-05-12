@@ -36,6 +36,10 @@ expr        ::= add_expr
 prime_type  ::= "int" | "string" | "char"
 ```
 
+## Write a pass for XY-Lang
+
+To be continue...  
+You can find a sample in [./src/opt/transform/blockmerge.cpp](https://github.com/Explainaur/XL-Lang/blob/main/src/opt/transforms/blockmerge.cpp)
 
 ## Not finish yet
 I am a little lazy. So the EBNF is not complete.
@@ -70,14 +74,13 @@ entry:
   store i32 1, i32* %0
   br label %while.cond0
 
-while.cond0: ; preds: body, loop.body0
+while.cond0: ; preds: entry, loop.body0
   %1 = load i32, i32* %x.addr
   %2 = load i32, i32* %y.addr
   %3 = add i32 %1, %2
   %4 = load i32, i32* %0
   %5 = icmp sgt i32 %3, %4
   br i1 %5, label %loop.body0, label %while.end0
-
 
 loop.body0: ; preds: while.cond0
   %6 = load i32, i32* %0

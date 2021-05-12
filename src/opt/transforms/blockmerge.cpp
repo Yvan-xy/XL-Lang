@@ -37,12 +37,13 @@ public:
       if (entry == nullptr) entry = it.get();
       auto block = CastTo<BasicBlock>(it.get());
 
-      // check if have only one predecessor
+      // check if this block has only one predecessor
       if (block->size() == 1) {
         auto pred = CastTo<BasicBlock>((*block)[0].get());
         auto inst = *(--pred->inst_end());
         auto branch_inst = CastTo<Instruction>(inst);
 
+        // check if its predecessor has only one successor
         if (branch_inst->opcode() == Instruction::TermOps::Ret ||
             branch_inst->opcode() == Instruction::TermOps::Jmp) {
           _changed = true;
@@ -52,6 +53,7 @@ public:
           block->ReplaceBy(pred);
           it.set(nullptr);
         }
+
       }
 
       // delete unreachable block

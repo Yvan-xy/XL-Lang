@@ -468,14 +468,26 @@ void Function::Dump(std::ostream &os, IdManager &id_mgr) const {
   os << ") {\n";
 
   // dump content of blocks
+  bool report_exit = false;
   for (std::size_t i = 0; i < this->size(); i++) {
-    if (i == 1) continue;
+
+    // dump function exit later
+    if (auto block = CastTo<BasicBlock>((*this)[i].get())) {
+      if (block->name() == "func_exit") {
+        report_exit = true;
+        continue;
+      }
+    }
+
     DumpValue(os, id_mgr, (*this)[i]);
     // end of block
-    os << "\n" << std::endl;
+    os << "\n";
   }
-  DumpValue(os, id_mgr, (*this)[1]);
-  os << std::endl;
+
+  if (report_exit) {
+    DumpValue(os, id_mgr, (*this)[1]);
+    os << std::endl;
+  }
 
   // end of function
   os << "}\n" << std::endl;
